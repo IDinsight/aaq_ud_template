@@ -1,0 +1,32 @@
+name: Docker Make and Push Image
+on:
+  release:
+    # Only use the types keyword to narrow down the activity types that will trigger your workflow.
+    types: [published]
+
+jobs:
+  DockerMakeandPush:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ github.event.repository.name }}:${{ github.event.release.tag_name }}
+    outputs:
+      env-name: ${{ steps.env-name.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build Docker image
+        run: |
+          cp ./requirements.txt ./core_model/requirements.txt
+          docker build --rm \
+            --build-arg NAME=${{ github.event.repository.name }} \
+            --build-arg PORT=9904 \
+            --build-arg TOKEN_MACHINE_USER=${{ secrets.TOKEN_MACHINE_USER }} \
+            -t $IMAGE_NAME \
+            ./core_model
+      - name: Log into GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Push Docker image to GHCR
+        run: |
+          docker image tag $IMAGE_NAME ghcr.io/idinsight/$IMAGE_NAME
+          docker push ghcr.io/idinsight/$IMAGE_NAME

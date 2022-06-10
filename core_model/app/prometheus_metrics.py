@@ -1,0 +1,3 @@
+from prometheus_flask_exporter.multiprocess import GunicornInternalPrometheusMetrics
+
+metrics = GunicornInternalPrometheusMetrics.for_app_factory()

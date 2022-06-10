@@ -1,0 +1,5 @@
+PG_PORT : 5432
+PG_DATABASE : aaq-template-db-test
+PG_USERNAME: flask_test
+MODEL_PORT : 9904
+MODEL_PROTOCOL : http

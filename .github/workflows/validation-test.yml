@@ -1,0 +1,70 @@
+name: NLP Core Model Validation
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  ValidateModels:
+    runs-on: ubuntu-latest
+    outputs:
+      env-name: ${{ steps.env-name.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install Dependencies with Apt Get
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3.8 jq -y
+      - name: Install libraries
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements_github_actions.txt
+          nltkdownload=`cat <<EOF
+          import nltk
+          nltk.download('stopwords')
+          nltk.download('punkt')
+          EOF`
+          python -c "$nltkdownload"
+          pip install git+https://${{ secrets.TOKEN_MACHINE_USER }}@github.com/IDinsight/faqt.git
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure variables
+        shell: bash
+        id: vars
+        env:
+          REPO: ${{ github.repository }}
+          HASH: ${{ github.sha }}
+          REF: ${{ github.ref }}
+        run: |
+          # Set variables
+          DROPBOX_TOKEN=${{secrets.DROPBOX_TOKEN}}
+          BRANCH=${REF#refs/heads/}
+          REPOSITORY=`echo $REPO | tr "/" "-"`
+          ENVIRONMENT=$BRANCH-$REPOSITORY-${{ secrets.AWS_REGION }}
+
+          # In this step we are setting variables and persistenting them
+          # into the environment so that they can be utilized in other steps
+          echo "::set-output name=branch::$BRANCH"
+          echo "::set-output name=repository::$REPOSITORY"
+          echo "::set-output name=environment::$ENVIRONMENT"
+          echo "::set-output name=dropbox_token::$DROPBOX_TOKEN"
+          # Output variables to ensure their values are set correctly when ran
+          echo "The region is ${{ secrets.AWS_REGION }}"
+          echo "The repository is $REPOSITORY"
+          echo "The environment is $ENVIRONMENT"
+          echo "The branch is $BRANCH"
+      - name: Run Unit Tests
+        env:
+          PG_ENDPOINT: ${{secrets.GA_PG_ENDPOINT}}
+          PG_PASSWORD: ${{secrets.GA_PG_PASSWORD}}
+          UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_INBOUND_CHECK_TOKEN}}
+          PROMETHEUS_MULTIPROC_DIR: /tmp
+        run: |
+          pytest tests

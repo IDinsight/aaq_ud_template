@@ -1,0 +1,10 @@
+apiVersion: 1
+
+datasources:
+  - name: MomConnect UD Prometheus
+    type: prometheus
+    uid: pFzMnJ4
+    editable: true
+    is_default: true
+    access: proxy
+    url: http://host.docker.internal:9091

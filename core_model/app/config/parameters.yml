@@ -1,0 +1,54 @@
+preprocessing:
+  min_dashed_words_to_parse_text_from_url: 4
+  reincluded_stop_words:
+    - how
+    - what
+    - who
+    - in
+    - where
+    - can
+  ngram_min: 1
+  ngram_max: 2
+  custom_spell_check_list: []
+  custom_spell_correct_map:
+    virginia: vagina
+  priority_words:
+    - headache
+    - fever
+    - nausea
+    - nauseous
+    - throw
+    - migraine
+    - backache
+    - pain
+    - stomach
+    - belly
+    - tummy
+    - throb
+    - faint
+    - pass
+    - dizzy
+    - dizziness
+    - memory
+    - lightheaded
+    - lightheadedness
+    - swell
+    - swollen
+    - swelling
+    - hopeless
+    - sad
+    - worried
+    - breath
+    - breathing
+    - breathe
+    - throat
+    - chest
+    - tight
+    - cramp
+    - vagina
+    - clot
+    - discharge
+    - blood
+    - bleed
+    - tired
+    - energy
