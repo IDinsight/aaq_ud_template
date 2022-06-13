@@ -2,7 +2,6 @@ CREATE TABLE urgency_rules (
 	urgency_rule_id serial NOT NULL,
 	urgency_rule_added_utc timestamp without time zone NOT NULL,
 	urgency_rule_author text NOT NULL,
-	faq_title text NOT NULL,
 	urgency_rule_title text NOT NULL,
 	urgency_rule_tags_include text [] NOT NULL,
 	urgency_rule_tags_exclude text [] NOT NULL,
