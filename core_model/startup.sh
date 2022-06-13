@@ -11,7 +11,7 @@
 if [[ $ENABLE_RULE_REFRESH_CRON == "true" ]]; then
     echo "Enabling cron job for Urgency Rule refresh"
     service cron start
-    echo '0 * * * * curl http://127.0.0.1:'$PORT'/internal/refresh-rules -H "Authorization: Bearer '$UD_INBOUND_CHECK_TOKEN'"\n' > cronrules
+    echo '*/5 * * * * curl http://127.0.0.1:'$PORT'/internal/refresh-rules -H "Authorization: Bearer '$UD_INBOUND_CHECK_TOKEN'"' > cronrules
     crontab cronrules
 else
     echo "Cron job not enabled within container. Set ENABLE_RULE_REFRESH_CRON to 'true' to run"

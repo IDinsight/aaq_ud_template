@@ -10,7 +10,8 @@ Ensure to pull in new features from this repository regularly.
 ## What is this?
 
 This module is the urgency detection app that receives inbound messages and checks if they are urgent based on the urgency rules.
-![Urgency Detection diagram](./docs/readme/images/urgency_detection.png)
+
+![Urgency Detection example diagram](./docs/readme/images/urgency_detection.png)
 
 ## Setup
 
@@ -56,16 +57,7 @@ export PG_PASSWORD=
 
 export UD_INBOUND_CHECK_TOKEN=
 export TOKEN_MACHINE_USER=
-
 ```
-
-You need to:
-
-1. Create a conda environment and install libraries in `requirements.txt` and `requirements_dev.txt`
-2. Enable pre-commit hooks
-3. Create `config_secrets.env` files for all three apps
-
-or just use the Makefile.
 
 ### Configure project details
 
@@ -79,7 +71,7 @@ In past projects, this has been Postgres on RDS. You don't need to create any da
 
 Note the connection details for the DB and the password for the `postgres` user. We'll need them in the [section](#enter_details_in_secrets_file) below.
 
-#### `make setup-dev`
+#### Run `make setup-dev`
 
 This command does the following:
 
@@ -106,6 +98,10 @@ This command does the following:
 2. Creates the dev and test databases
 3. Creates a new schema (based on `$PROJECT_SHORT_NAME`) and sets as default
 4. Creates the tables needed for the app
+
+#### Run `make setup-ecr`
+
+This creates the ECR repository for the project to store docker images.
 
 #### Setup Github secrets
 

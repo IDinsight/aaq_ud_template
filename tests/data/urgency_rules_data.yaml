@@ -1,0 +1,17 @@
+rule_refresh_data:
+  - rule_id: 1
+    include: ["rock", "guitar", "melodi"]
+    exclude: []
+    title: "music"
+  - rule_id: 2
+    include: ["guitar", "hike"]
+    exclude: ["melodi"]
+    title: "guitar_hike"
+  - rule_id: 3
+    include: [ "rock", "lake", "hike" ]
+    exclude: []
+    title: "hiking"
+  - rule_id: 4
+    include: []
+    exclude: ["love"]
+    title: "no_love"

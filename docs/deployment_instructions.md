@@ -1,4 +1,4 @@
-June 9, 2022
+June 13, 2022
 
 CURRENT VERSION: aaq_ud_template:v1.0.0
 
@@ -14,14 +14,14 @@ Setup DB tables using `scripts/ud_tables.sql`.
 
 # Images
 
-The Docker image for the urgency detection server is hosted on GHCR at
-`ghcr.io/idinsight/aaq_ud_template:v1.0.0`
+The Docker image for the urgency detection model server is hosted on AWS ECR at
+`[AWS_ACCOUNT_ID].dks.ecr.af-south-1.amazonaws.com/aaq_solution/aaq_ud_template:v1.0.0`
 
-You'll need a token to access the image. Please contact IDinsight for this token.
+Your AWS user will need access to this resource. Please contact IDinsight for access.
 
 ## Resources for images
 
-The core urgency detection model does not need many resources.
+The urgency detection model does not need many resources.
 
 ## Image setup
 

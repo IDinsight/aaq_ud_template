@@ -1,4 +1,4 @@
-name: NLP Core Model Validation
+name: AAQ Urgency Detection Validation
 on:
   push:
     branches:
@@ -27,7 +27,7 @@ jobs:
           nltk.download('punkt')
           EOF`
           python -c "$nltkdownload"
-          pip install git+https://${{ secrets.TOKEN_MACHINE_USER }}@github.com/IDinsight/faqt.git
+          pip install git+https://${{ secrets.TOKEN_MACHINE_USER }}@github.com/IDinsight/faqt.git@v0.1.0
       - name: Configure AWS credentials
         id: creds
         uses: aws-actions/configure-aws-credentials@v1
@@ -64,7 +64,7 @@ jobs:
         env:
           PG_ENDPOINT: ${{secrets.GA_PG_ENDPOINT}}
           PG_PASSWORD: ${{secrets.GA_PG_PASSWORD}}
-          UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_INBOUND_CHECK_TOKEN}}
+          UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
           PROMETHEUS_MULTIPROC_DIR: /tmp
         run: |
           pytest tests

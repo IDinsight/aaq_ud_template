@@ -57,6 +57,11 @@ setup-db: cmd-exists-psql cmd-exists-createdb guard-PG_ENDPOINT guard-PG_PORT gu
 		-c "CREATE SCHEMA $(PROJECT_SHORT_NAME) AUTHORIZATION $(PG_USERNAME)_test; ALTER ROLE $(PG_USERNAME)_test SET search_path TO $(PROJECT_SHORT_NAME);"
 	@rm .pgpass
 
+setup-ecr: cmd-exists-aws
+	aws ecr create-repository \
+		--repository-name aaq_solution/$(NAME) \
+		--region af-south-1
+
 # Setup postgres tables
 init-db-tables: cmd-exists-psql guard-PG_ENDPOINT guard-PG_PORT guard-PG_USERNAME guard-PG_PASSWORD guard-PG_DATABASE
 	@echo $(PG_ENDPOINT):$(PG_PORT):$(PG_DATABASE):$(PG_USERNAME):$(PG_PASSWORD) > .pgpass
@@ -122,6 +127,12 @@ container:
 		--env-file ./secrets/database_secrets.env \
 		--env-file ./secrets/sentry_config.env \
 		$(NAME):$(VERSION)
+
+push-image: image cmd-exists-aws
+	aws ecr --profile=praekelt-user get-login-password --region af-south-1 \
+		| docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.af-south-1.amazonaws.com
+	docker tag $(NAME):$(VERSION) $(AWS_ACCOUNT_ID).dkr.ecr.af-south-1.amazonaws.com/aaq_solution/$(NAME):$(VERSION)
+	docker push $(AWS_ACCOUNT_ID).dkr.ecr.af-south-1.amazonaws.com/aaq_solution/$(NAME):$(VERSION)
 
 prometheus:
 	@docker container ls -a --filter name=prometheus --format "{{.ID}}" | xargs -r docker stop
