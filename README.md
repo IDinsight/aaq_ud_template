@@ -84,11 +84,11 @@ This command does the following:
 
 You should edit each of the files in `./secrets` and set the correct parameters.
 
--   `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. You can set whatever username (usually `flask`) and password you prefer. These details will be used to create the role.
+- `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. You can set whatever username (usually `flask`) and password you prefer. These details will be used to create the role.
+- `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests locally.
+- Other files should be updated before you can test the instance.
 
--   `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests locally.
-
--   Other files should be updated before you can test the instance.
+See `docs/deployment_instructions.md` for more detailed explanations on each secret environment variable. 
 
 #### Run `make setup-db-all`
 
@@ -132,4 +132,3 @@ To run this project:
 
 1. `make image` to create the docker image
 2. `make container` to create the docker container
-
