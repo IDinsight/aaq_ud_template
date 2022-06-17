@@ -65,12 +65,6 @@ The `project_config.cfg` in the root directory should be updated with your proje
 
 ### Initialise
 
-#### Create a Postgres Db instance
-
-In past projects, this has been Postgres on RDS. You don't need to create any databases at this point. We'll create that in one of the steps below.
-
-Note the connection details for the DB and the password for the `postgres` user. We'll need them in the [section](#enter_details_in_secrets_file) below.
-
 #### Run `make setup-dev`
 
 This command does the following:
@@ -84,11 +78,11 @@ This command does the following:
 
 You should edit each of the files in `./secrets` and set the correct parameters.
 
-- `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. You can set whatever username (usually `flask`) and password you prefer. These details will be used to create the role.
-- `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests locally.
-- Other files should be updated before you can test the instance.
+-   `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. You can set whatever username (usually `flask`) and password you prefer. These details will be used to create the role.
+-   `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests.
+-   Other files should be updated before you can test the instance.
 
-See `docs/deployment_instructions.md` for more detailed explanations on each secret environment variable. 
+See `docs/deployment_instructions.md` for more detailed explanations on each secret environment variable.
 
 #### Run `make setup-db-all`
 
@@ -118,11 +112,11 @@ Note the secrets setup for this repository in Github. Ensure that these are also
 2. Setup auto deployment on EC2 (using webhooks or other)
 3. Update this file!
 
--   Remove irrelevant content (all the template text)
--   Update the badges at the top of this file
+    - Remove irrelevant content (all the template text)
+    - Update the badges at the top of this file
 
-6. Setup application monitoring
-7. Setup other apps as necessary
+4. Setup application monitoring
+5. Setup other apps as necessary
 
 ## Running Project
 
