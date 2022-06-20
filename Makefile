@@ -35,26 +35,40 @@ guard-%:
 
 setup: setup-dev setup-db-all setup-ecr
 
-setup-db-all: setup-db init-db-tables
+setup-db-tables: check-db init-db-tables
 
 setup-dev: setup-env setup-secrets
 
-setup-db: cmd-exists-psql cmd-exists-createdb guard-PG_ENDPOINT guard-PG_PORT guard-PG_USERNAME guard-PG_PASSWORD guard-PG_DATABASE
-	@echo "Creating Role: $(PG_USERNAME)"
-	@psql -U postgres -h $(PG_ENDPOINT) -c "CREATE ROLE $(PG_USERNAME) WITH CREATEDB LOGIN PASSWORD '$(PG_PASSWORD)';"
-	@echo "Creating Role: $(PG_USERNAME)_test"
-	@psql -U postgres -h $(PG_ENDPOINT) -c "CREATE ROLE $(PG_USERNAME)_test WITH CREATEDB LOGIN PASSWORD '$(PG_PASSWORD)';"
+check-db: cmd-exists-psql cmd-exists-createdb guard-PG_ENDPOINT guard-PG_PORT guard-PG_USERNAME guard-PG_PASSWORD guard-PG_DATABASE
+	@echo "Checking if role $(PG_USERNAME) exists...";
+	@result=`psql -U postgres -h $(PG_ENDPOINT) -tAc "SELECT 1 FROM pg_roles WHERE rolname='$(PG_USERNAME)'"`; \
+	if [[ $$result != "1" ]]; then echo 'ERROR: role $(PG_USERNAME) does not exist.' && exit 1; fi
+
+	@echo "Checking if role $(PG_USERNAME)_test exists..."
+	@result=`psql -U postgres -h $(PG_ENDPOINT) -tAc "SELECT 1 FROM pg_roles WHERE rolname='$(PG_USERNAME)_test'"`; \
+	if [[ $$result != "1" ]]; then echo 'ERROR: role $(PG_USERNAME)_test does not exist.' && exit 1; fi
+
 	@echo $(PG_ENDPOINT):$(PG_PORT):*:$(PG_USERNAME):$(PG_PASSWORD) > .pgpass
 	@echo $(PG_ENDPOINT):$(PG_PORT):*:$(PG_USERNAME)_test:$(PG_PASSWORD) >> .pgpass
 	@chmod 0600 .pgpass
-	@echo "Creating Db: $(PG_DATABASE)"
-	@createdb -h $(PG_ENDPOINT) -p $(PG_PORT) -U $(PG_USERNAME) -O $(PG_USERNAME) $(PG_DATABASE)
-	@psql -h $(PG_ENDPOINT) -p $(PG_PORT) -U $(PG_USERNAME) -d $(PG_DATABASE) \
-		-c "CREATE SCHEMA $(PROJECT_SHORT_NAME) AUTHORIZATION $(PG_USERNAME); ALTER ROLE $(PG_USERNAME) SET search_path TO $(PROJECT_SHORT_NAME);"
-	@echo "Creating Db: $(PG_DATABASE)-test"
-	@createdb -h $(PG_ENDPOINT) -p $(PG_PORT) -U $(PG_USERNAME)_test -O $(PG_USERNAME)_test $(PG_DATABASE)-test
-	@psql -h $(PG_ENDPOINT) -p $(PG_PORT) -U $(PG_USERNAME)_test -d $(PG_DATABASE)-test \
-		-c "CREATE SCHEMA $(PROJECT_SHORT_NAME) AUTHORIZATION $(PG_USERNAME)_test; ALTER ROLE $(PG_USERNAME)_test SET search_path TO $(PROJECT_SHORT_NAME);"
+
+	@echo "Checking if database $(PG_DATABASE) exists..."
+	@result=`psql -U postgres -h $(PG_ENDPOINT) -p $(PG_PORT) -XtAc "SELECT 1 FROM pg_database WHERE datname='$(PG_DATABASE)'"`; \
+	if [[ $$result != "1" ]]; then echo 'ERROR: database $(PG_DATABASE) does not exist.' && exit 1; fi
+
+	@echo "Checking if owner of database $(PG_DATABASE) is $(PG_USERNAME)..."
+	@result=`psql -U postgres -h $(PG_ENDPOINT) -p $(PG_PORT) -XtAc "SELECT 1 FROM pg_database, pg_roles WHERE pg_database.datname = '$(PG_DATABASE)' AND pg_database.datdba = pg_roles.oid AND pg_roles.rolname = '$(PG_USERNAME)'"`; \
+	if [[ $$result != "1" ]]; then echo 'ERROR: owner of database $(PG_DATABASE) is not $(PG_USERNAME).' && exit 1; fi
+
+	@echo "Checking if database $(PG_DATABASE)-test exists..."
+	@result=`psql -U postgres -h $(PG_ENDPOINT) -p $(PG_PORT) -XtAc "SELECT 1 FROM pg_database WHERE datname='$(PG_DATABASE)-test'"`; \
+	if [[ $$result != "1" ]]; then echo 'ERROR: database $(PG_DATABASE)-test does not exist.' && exit 1; fi
+
+	@echo "Checking if owner of database $(PG_DATABASE)-test is $(PG_USERNAME)_test..."
+	@result=`psql -U postgres -h $(PG_ENDPOINT) -p $(PG_PORT) -XtAc "SELECT 1 FROM pg_database, pg_roles WHERE pg_database.datname='$(PG_DATABASE)-test' AND pg_database.datdba=pg_roles.oid AND pg_roles.rolname='$(PG_USERNAME)_test'"`; \
+	if [[ $$result != "1" ]]; then echo 'ERROR: owner of database $(PG_DATABASE)-test is not $(PG_USERNAME)_test.' && exit 1; fi
+
+	@echo "All checks passed."
 	@rm .pgpass
 
 setup-ecr: cmd-exists-aws
