@@ -33,24 +33,25 @@ cmd-exists-%:
 guard-%:
 	@if [ -z '${${*}}' ]; then echo 'ERROR: environment variable $* not set' && exit 1; fi
 
-setup: setup-dev setup-db-all setup-ecr
+setup: setup-dev setup-db-tables setup-ecr
 
 setup-db-tables: check-db init-db-tables
 
 setup-dev: setup-env setup-secrets
 
-check-db: cmd-exists-psql cmd-exists-createdb guard-PG_ENDPOINT guard-PG_PORT guard-PG_USERNAME guard-PG_PASSWORD guard-PG_DATABASE
-	@echo "Checking if role $(PG_USERNAME) exists...";
+check-db: cmd-exists-psql guard-PG_ENDPOINT guard-PG_PORT guard-PG_PASSWORD guard-PG_DATABASE
+	@read -s -p "Enter master 'postgres' password: " PGPASSWORD; \
+	echo $(PG_ENDPOINT):$(PG_PORT):*:postgres:$$PGPASSWORD > .pgpass
+	@chmod 0600 .pgpass
+
+	@echo ""
+	@echo "Checking if role $(PG_USERNAME) exists..." 
 	@result=`psql -U postgres -h $(PG_ENDPOINT) -tAc "SELECT 1 FROM pg_roles WHERE rolname='$(PG_USERNAME)'"`; \
 	if [[ $$result != "1" ]]; then echo 'ERROR: role $(PG_USERNAME) does not exist.' && exit 1; fi
 
 	@echo "Checking if role $(PG_USERNAME)_test exists..."
 	@result=`psql -U postgres -h $(PG_ENDPOINT) -tAc "SELECT 1 FROM pg_roles WHERE rolname='$(PG_USERNAME)_test'"`; \
 	if [[ $$result != "1" ]]; then echo 'ERROR: role $(PG_USERNAME)_test does not exist.' && exit 1; fi
-
-	@echo $(PG_ENDPOINT):$(PG_PORT):*:$(PG_USERNAME):$(PG_PASSWORD) > .pgpass
-	@echo $(PG_ENDPOINT):$(PG_PORT):*:$(PG_USERNAME)_test:$(PG_PASSWORD) >> .pgpass
-	@chmod 0600 .pgpass
 
 	@echo "Checking if database $(PG_DATABASE) exists..."
 	@result=`psql -U postgres -h $(PG_ENDPOINT) -p $(PG_PORT) -XtAc "SELECT 1 FROM pg_database WHERE datname='$(PG_DATABASE)'"`; \
