@@ -57,6 +57,7 @@ export PG_PASSWORD=
 
 export UD_INBOUND_CHECK_TOKEN=
 export TOKEN_MACHINE_USER=
+export PROMETHEUS_MULTIPROC_DIR=
 ```
 
 ### Configure project details
@@ -64,12 +65,6 @@ export TOKEN_MACHINE_USER=
 The `project_config.cfg` in the root directory should be updated with your project details.
 
 ### Initialise
-
-#### Create a Postgres Db instance
-
-In past projects, this has been Postgres on RDS. You don't need to create any databases at this point. We'll create that in one of the steps below.
-
-Note the connection details for the DB and the password for the `postgres` user. We'll need them in the [section](#enter_details_in_secrets_file) below.
 
 #### Run `make setup-dev`
 
@@ -84,20 +79,19 @@ This command does the following:
 
 You should edit each of the files in `./secrets` and set the correct parameters.
 
-- `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. You can set whatever username (usually `flask`) and password you prefer. These details will be used to create the role.
-- `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests locally.
-- Other files should be updated before you can test the instance.
+-   `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. The databases `$PG_DATABASE` and `$PG_DATABASE-test` and their owners `$PG_USERNAME` and `$PG_USERNAME_test` must exist already.  
+-   `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests.
+-   Other files should be updated before you can test the instance.
 
-See `docs/deployment_instructions.md` for more detailed explanations on each secret environment variable. 
+See `docs/deployment_instructions.md` for more detailed explanations on each secret environment variable.
 
-#### Run `make setup-db-all`
+#### Run `make setup-db-tables`
 
 This command does the following:
 
-1. Creates the dev and test user
-2. Creates the dev and test databases
-3. Creates a new schema (based on `$PROJECT_SHORT_NAME`) and sets as default
-4. Creates the tables needed for the app
+1. Checks that the users and databases exist at the given endpoint as defined in `secrets/database_secrets.env`
+2. Creates the tables needed for the app
+
 
 #### Run `make setup-ecr`
 
@@ -118,11 +112,11 @@ Note the secrets setup for this repository in Github. Ensure that these are also
 2. Setup auto deployment on EC2 (using webhooks or other)
 3. Update this file!
 
--   Remove irrelevant content (all the template text)
--   Update the badges at the top of this file
+    - Remove irrelevant content (all the template text)
+    - Update the badges at the top of this file
 
-6. Setup application monitoring
-7. Setup other apps as necessary
+4. Setup application monitoring
+5. Setup other apps as necessary
 
 ## Running Project
 
@@ -132,3 +126,8 @@ To run this project:
 
 1. `make image` to create the docker image
 2. `make container` to create the docker container
+
+To run monitoring,
+1. `make prometheus` to run prometheus server on docker
+2. `make grafana` to run grafana server on docker (go to localhost:3000 and login with admin/admin)
+3. `make uptime-exporter` to relay endpoint uptime information to prometheus
