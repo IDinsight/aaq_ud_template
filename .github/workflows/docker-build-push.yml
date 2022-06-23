@@ -37,7 +37,6 @@ jobs:
       - name: Docker tag and push image to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      - name: Push Docker image to GHCR
         run: |
           docker image tag ${IMAGE_NAME} $ECR_REGISTRY/aaq_solution/${IMAGE_NAME}
           docker push $ECR_REGISTRY/aaq_solution/$IMAGE_NAME
