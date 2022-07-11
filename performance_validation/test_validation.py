@@ -131,7 +131,7 @@ class TestPerformance:
         )
         return response["urgency_score"]
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def ud_rules(self, client, db_engine):
         """
         Setup rules data in a temp db table.
@@ -149,7 +149,7 @@ class TestPerformance:
                     "include": eval(row["Include Tags"]),
                     "exclude": eval(row["Exclude Tags"]),
                     "added_utc": "2022-06-21",
-                    "author": "Pytest author",
+                    "author": "Validation author",
                 }
                 for _, row in self.rules_data.iterrows()
             ]
@@ -159,9 +159,16 @@ class TestPerformance:
         yield
         with db_engine.connect() as db_connection:
             t = text(
-                "DELETE FROM urgency_rules " "WHERE urgency_rule_author='Pytest author'"
+                "DELETE FROM urgency_rules "
+                "WHERE urgency_rule_author='Validation author'"
             )
-            db_connection.execute(t)
+            t2 = text("DELETE * FROM mc.inbounds_ud")
+
+            with db_connection.begin():
+                db_connection.execute(t)
+            with db_connection.begin():
+                db_connection.execute(t2)
+
         client.get("/internal/refresh-rules", headers=headers)
 
     def test_ud_performance(self, client, test_params, ud_rules):
