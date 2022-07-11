@@ -51,7 +51,6 @@ def setup(app, params):
         SECRET_KEY=os.urandom(24),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SQLALCHEMY_ENGINE_OPTIONS={
-            "pool_size": 10,
             "pool_pre_ping": True,
             "pool_recycle": 300,
         },

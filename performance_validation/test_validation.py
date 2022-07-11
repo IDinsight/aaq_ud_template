@@ -16,7 +16,6 @@ from sqlalchemy import text
 
 from core_model.app.database_sqlalchemy import db
 
-# This is required to allow multithreading to work
 stopwords.ensure_loaded()
 
 
@@ -30,16 +29,15 @@ def generate_message(recall, threshold_criteria, precision, accuracy, f1, confus
     threshold_criteria : float, 0-1
         Accuracy cut-off for warnings
     """
-    current_branch = os.environ["BRANCH"]
-    repo_name = os.environ["REPO"]
-    commit = os.environ["HASH"]
-    ref = os.environ["REF"]
+    current_branch = os.environ.get("BRANCH")
+    repo_name = os.environ.get("REPO")
+    commit = os.environ.get("HASH")
+    ref = os.environ.get("REF")
 
     val_message = """
     [Alert] Recall was {recall} for {commit_tag} with {commit_message} on 
     branch {branch} of 
-    repo {repo_name} 
-    below threshold of {threshold_criteria}.
+    repo {repo_name}.
 
     Other Indicators ->
 
@@ -163,7 +161,7 @@ class TestPerformance:
                 "DELETE FROM urgency_rules "
                 "WHERE urgency_rule_author='Validation author'"
             )
-            t2 = text("DELETE * FROM mc.inbounds_ud")
+            t2 = text("DELETE FROM mc.inbounds_ud")
 
             with db_connection.begin():
                 db_connection.execute(t)
@@ -206,16 +204,17 @@ class TestPerformance:
         accuracy = accuracy_score(y_true=true_val, y_pred=predicted)
         f1 = f1_score(y_true=true_val, y_pred=predicted, zero_division=0)
 
+        alert = generate_message(
+            round(recall, 2),
+            test_params["THRESHOLD_CRITERIA"],
+            round(precision, 2),
+            round(accuracy, 2),
+            round(f1, 2),
+            confusion,
+        )
         if recall < test_params["THRESHOLD_CRITERIA"]:
-            send_notification(
-                content=generate_message(
-                    recall,
-                    test_params["THRESHOLD_CRITERIA"],
-                    precision,
-                    accuracy,
-                    f1,
-                    confusion,
-                )
-            )
+            send_notification(content=alert)
+
+        print(alert)
 
         return recall
