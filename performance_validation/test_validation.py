@@ -1,4 +1,3 @@
-import concurrent.futures
 import os
 from datetime import datetime
 
@@ -14,6 +13,8 @@ from sklearn.metrics import (
     recall_score,
 )
 from sqlalchemy import text
+
+from core_model.app.database_sqlalchemy import db
 
 # This is required to allow multithreading to work
 stopwords.ensure_loaded()
@@ -171,10 +172,12 @@ class TestPerformance:
 
         client.get("/internal/refresh-rules", headers=headers)
 
-    def test_ud_performance(self, client, test_params, ud_rules):
+    def test_ud_performance(self, monkeypatch, client, test_params, ud_rules):
         """
         Test the performance of UD in detecting urgent messaged.
         """
+
+        monkeypatch.setattr(db.session, "add", lambda x: None)
 
         validation_df = self.get_data_to_validate()
         validation_df = validation_df.loc[
@@ -183,15 +186,12 @@ class TestPerformance:
         ]
 
         # we use multithreading. this is I/O bound and very inefficient if we loop
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            responses = executor.map(
-                lambda x: self.send_a_request_to_client(
-                    x, client, test_params, ud_rules
-                ),
-                [row for _, row in validation_df.iterrows()],
-            )
+        responses = [
+            self.send_a_request_to_client(row, client, test_params, ud_rules)
+            for _, row in validation_df.iterrows()
+        ]
 
-        predicted = pd.Series(list(responses))
+        predicted = pd.Series(responses)
 
         true_val = validation_df[test_params["TRUE_URGENCY"]]
 
