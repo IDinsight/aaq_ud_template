@@ -70,8 +70,7 @@ jobs:
           pytest tests
       - name: Run Validation Test
         env:
-          VALIDATION_DATA: ${{secrets.VALIDATION_DATA}}
-          VALIDATION_RULES: ${{secrets.VALIDATION_RULES}}
+          VALIDATION_BUCKET: ${{secrets.VALIDATION_BUCKET}}
           REPO: ${{ github.repository }}
           BRANCH: ${{steps.vars.outputs.branch}}
           HASH: ${{ github.sha }}

@@ -16,6 +16,8 @@ from sqlalchemy import text
 
 from core_model.app.database_sqlalchemy import db
 
+from .utils import S3_Handler
+
 stopwords.ensure_loaded()
 
 
@@ -88,6 +90,12 @@ class TestPerformance:
     """
     Setup Class for performance validation"""
 
+    s3 = boto3.client("s3")
+    s3r = boto3.resource("s3")
+    bucket = os.getenv("VALIDATION_BUCKET")
+
+    s3_handler = S3_Handler(s3, s3r, bucket)
+
     insert_rule = (
         "INSERT INTO urgency_rules ("
         "urgency_rule_title, urgency_rule_tags_include, "
@@ -95,25 +103,23 @@ class TestPerformance:
         "VALUES (:title, :include, :exclude, :added_utc, :author)"
     )
 
-    def get_data_to_validate(self):
+    def get_data_to_validate(self, test_params):
         """
         Download data from S3.
-
-        This can either get VALIDATION_DATA which is 2,000 rows
-        and takes 2-3 hours to run or
-        VALDIATION_SAMPLE which is 5 rows and takes 20 seconds.
         """
 
-        df = pd.read_csv(os.environ["VALIDATION_DATA"])
+        prefix = test_params["DATA_PREFIX"]
+        df = self.s3_handler.load_dataframe_from_object(prefix)
 
         return df
 
-    def get_rules_data(self):
+    def get_rules_data(self, test_params):
         """
         Download rules data from S3.
         """
 
-        rules = pd.read_csv(os.environ["VALIDATION_RULES"])
+        prefix = test_params["UD_RULES_PREFIX"]
+        rules = self.s3_handler.load_dataframe_from_object(prefix)
 
         return rules
 
@@ -183,7 +189,6 @@ class TestPerformance:
             & (validation_df[test_params["QUERY_COL"]] != "")
         ]
 
-        # we use multithreading. this is I/O bound and very inefficient if we loop
         responses = [
             self.send_a_request_to_client(row, client, test_params, ud_rules)
             for _, row in validation_df.iterrows()
@@ -212,9 +217,12 @@ class TestPerformance:
             round(f1, 2),
             confusion,
         )
-        if recall < test_params["THRESHOLD_CRITERIA"]:
+        if (recall < test_params["THRESHOLD_CRITERIA"]) & (
+            os.environ.get("GITHUB_ACTIONS") is True
+        ):
             send_notification(content=alert)
 
-        print(alert)
+        else:
+            print(alert)
 
         return recall
