@@ -137,12 +137,12 @@ class TestPerformance:
         return response["urgency_score"]
 
     @pytest.fixture(scope="class")
-    def ud_rules(self, client, db_engine):
+    def ud_rules(self, client, db_engine, test_params):
         """
         Setup rules data in a temp db table.
         """
 
-        self.rules_data = self.get_rules_data()
+        self.rules_data = self.get_rules_data(test_params)
 
         headers = {"Authorization": "Bearer %s" % os.environ["UD_INBOUND_CHECK_TOKEN"]}
 
@@ -183,7 +183,7 @@ class TestPerformance:
 
         monkeypatch.setattr(db.session, "add", lambda x: None)
 
-        validation_df = self.get_data_to_validate()
+        validation_df = self.get_data_to_validate(test_params)
         validation_df = validation_df.loc[
             (validation_df[test_params["TRUE_URGENCY"]].notnull())
             & (validation_df[test_params["QUERY_COL"]] != "")
