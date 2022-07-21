@@ -79,7 +79,7 @@ jobs:
           PG_ENDPOINT: ${{secrets.GA_PG_ENDPOINT}}
           PG_PASSWORD: ${{secrets.GA_PG_PASSWORD}}
           UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
-        if: "${{(env.VALIDATION_DATA != '') && (env.VALIDATION_RULES != '')}}"
+        if: "${{(env.VALIDATION_BUCKET != '')}}"
         run: |
           # for testing
           python -m pytest performance_validation
