@@ -1,4 +1,4 @@
-June 13, 2022
+June 28, 2022
 
 CURRENT VERSION: aaq_ud_template:v1.0.0
 
@@ -15,7 +15,7 @@ Setup DB tables using `scripts/ud_tables.sql`.
 # Images
 
 The Docker image for the urgency detection model server is hosted on AWS ECR at
-`[AWS_ACCOUNT_ID].dks.ecr.af-south-1.amazonaws.com/aaq_solution/aaq_ud_template:v1.0.0`
+`[AWS_ACCOUNT_ID].dkr.ecr.af-south-1.amazonaws.com/aaq_solution/aaq_ud_template:v1.0.0`
 
 Your AWS user will need access to this resource. Please contact IDinsight for access.
 
@@ -44,7 +44,7 @@ The following environment variables are required when running the container:
   - `SENTRY_ENVIRONMENT`
   - `SENTRY_TRANSACTIONS_SAMPLE_RATE`
 - `DEPLOYMENT_ENV`
-    - For production, this should be set to `DEPLOYMENT_ENV=PRODUCTION`, which disables the tag check and tag validation endpoints for stability.
+    - For production, this should be set to `DEPLOYMENT_ENV=PRODUCTION`, which disables the endpoints `/tools/check-new-rules` and `/tools/validate-rule` for stability.
     - Note that the admin app (based on `aaq_admin_template`) depends on `aaq_ud_template` endpoints that are disabled if `DEPLOYMENT_ENV=PRODUCTION`. Thus, the admin app should always be a non-production instance of the urgency detection app.
 - `ENABLE_RULE_REFRESH_CRON`: Only set to "true" if you'd like to run a cron job within the containers to periodically refresh urgency rules.
 - `PROMETHEUS_MULTIPROC_DIR`: Directory to save prometheus metrics collected by multiple processes. It should be a directory that is cleared regularly (e.g. `/tmp`)

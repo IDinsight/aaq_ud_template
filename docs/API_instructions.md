@@ -1,4 +1,4 @@
-June 9, 2022
+July 28, 2022
 
 CURRENT VERSION: aaq_ud_template:v1.0.0
 
@@ -79,18 +79,17 @@ existing feedback will be saved.
 Response is one of the following pairs of (message, HTTP status)
 
 * `"Success", 200`: Successfully added feedback
-* `"No Matches", 404`: Did not match any previous inbound query
-* `"Incorrect Feedback Secret Key", 403`: Matched previous inbound query, but feedback secret key incorrect
+* `"No Matches", 404`: Did not match any previous inbound query by `inbound_id`
+* `"Incorrect Feedback Secret Key", 403`: Matched previous inbound query by `inbound_id`, but `feedback_secret_key` is incorrect
 
 ### Check new urgency rule: `POST /tools/check-new-rules`
+⚠️ This endpoint is disabled when `DEPLOYMENT_ENV=PRODUCTION`.
 
 The model will check each query message against the new urgency rule (defined by `include_keywords`
 and `exclude_keywords`), and returns the preprocessed forms of all inputs as well as whether each message is urgent or
 not according to this new rule.
 
 This endpoint is used by the demo (admin) app's "Check New Urgency Rule" tool.
-
-This endpoint is disabled when `DEPLOYMENT_ENV=PRODUCTION`.
 
 #### Params
 
@@ -135,9 +134,8 @@ This endpoint is disabled when `DEPLOYMENT_ENV=PRODUCTION`.
 }
 ```
 
-### Check if an urgency rule is valid: `POST /tools/validate-tags`
-
-This endpoint is disabled when `DEPLOYMENT_ENV=PRODUCTION`.
+### Check if an urgency rule is valid: `POST /tools/validate-rule`
+⚠️ This endpoint is disabled when `DEPLOYMENT_ENV=PRODUCTION`.
 
 #### Params
 
