@@ -16,12 +16,12 @@ from sqlalchemy import text
 
 from core_model.app.database_sqlalchemy import db
 
-from .utils import S3_Handler
-
 stopwords.ensure_loaded()
 
 
-def generate_message(recall, threshold_criteria, precision, accuracy, f1, confusion):
+def generate_message(
+    recall, threshold_criteria, precision, accuracy, f1, confusion, test_params
+):
     """Generate messages for validation results
     Warning is set to threshold criteria
     Parameters
@@ -31,43 +31,67 @@ def generate_message(recall, threshold_criteria, precision, accuracy, f1, confus
     threshold_criteria : float, 0-1
         Accuracy cut-off for warnings
     """
-    current_branch = os.environ.get("BRANCH")
-    repo_name = os.environ.get("REPO")
-    commit = os.environ.get("HASH")
-    ref = os.environ.get("REF")
 
-    val_message = """
-    [Alert] Recall was {recall} for {commit_tag} with {commit_message} on 
-    branch {branch} of 
-    repo {repo_name}.
+    dataset = test_params["DATA_PREFIX"]
 
-    Other Indicators ->
+    if os.environ.get("GITHUB_ACTIONS"):
 
-    Precision: {precision}, 
-    Accuracy: {accuracy}, 
-    F1 Score: {f1}, 
-    Confusion Matrix: {confusion}.
-    
-    """.format(
-        accuracy=accuracy,
-        commit_tag=commit,
-        commit_message=ref,
-        branch=current_branch,
-        repo_name=repo_name,
-        threshold_criteria=threshold_criteria,
-        precision=precision,
-        recall=recall,
-        f1=f1,
-        confusion=confusion,
-    )
+        current_branch = os.environ.get("BRANCH")
+        repo_name = os.environ.get("REPO")
+        commit = os.environ.get("HASH")
+        ref = os.environ.get("REF")
 
-    message = """
-        ------Model Validation Results-----
-        {}
-        -----------------------------------
-        """.format(
-        val_message
-    )
+        val_message = (
+            "\n[Alert] Recall was {recall} for\n"
+            "{commit_tag}\n with message "
+            "{commit_message}\non "
+            "branch {branch} of "
+            "repo {repo_name}. "
+            "The recall threshold level is {threshold_criteria}. "
+            "The performance was calculated using {dataset}.\n"
+            "\nOther Indicators ->\n\n"
+            "Precision: {precision},\n"
+            "Accuracy: {accuracy},\n"
+            "F1 Score: {f1},\n"
+            "Confusion Matrix: {confusion}."
+        ).format(
+            accuracy=accuracy,
+            commit_tag=commit,
+            commit_message=ref,
+            branch=current_branch,
+            repo_name=repo_name,
+            threshold_criteria=threshold_criteria,
+            precision=precision,
+            recall=recall,
+            f1=f1,
+            confusion=confusion,
+            dataset=dataset,
+        )
+    else:
+        val_message = (
+            "[Alert] Recall was {recall}."
+            "The recall threshold level is {threshold_criteria}. "
+            "Performance was calculated using {dataset}\n"
+            "\nOther Indicators ->\n\n"
+            "Precision: {precision},\n"
+            "Accuracy: {accuracy},\n"
+            "F1 Score: {f1},\n"
+            "Confusion Matrix: {confusion}."
+        ).format(
+            accuracy=accuracy,
+            threshold_criteria=threshold_criteria,
+            precision=precision,
+            recall=recall,
+            f1=f1,
+            confusion=confusion,
+            dataset=dataset,
+        )
+
+    message = (
+        "------Model Validation Results-----\n\n"
+        "{}\n\n"
+        "-----------------------------------"
+    ).format(val_message)
     return message
 
 
@@ -90,11 +114,7 @@ class TestPerformance:
     """
     Setup Class for performance validation"""
 
-    s3 = boto3.client("s3")
-    s3r = boto3.resource("s3")
     bucket = os.getenv("VALIDATION_BUCKET")
-
-    s3_handler = S3_Handler(s3, s3r, bucket)
 
     insert_rule = (
         "INSERT INTO urgency_rules ("
@@ -109,7 +129,7 @@ class TestPerformance:
         """
 
         prefix = test_params["DATA_PREFIX"]
-        df = self.s3_handler.load_dataframe_from_object(prefix)
+        df = pd.read_csv("s3://" + os.path.join(self.bucket, prefix))
 
         return df
 
@@ -119,7 +139,7 @@ class TestPerformance:
         """
 
         prefix = test_params["UD_RULES_PREFIX"]
-        rules = self.s3_handler.load_dataframe_from_object(prefix)
+        rules = pd.read_csv("s3://" + os.path.join(self.bucket, prefix))
 
         return rules
 
@@ -167,7 +187,7 @@ class TestPerformance:
                 "DELETE FROM urgency_rules "
                 "WHERE urgency_rule_author='Validation author'"
             )
-            t2 = text("DELETE FROM mc.inbounds_ud")
+            t2 = text("DELETE FROM inbounds_ud")
 
             with db_connection.begin():
                 db_connection.execute(t)
@@ -216,9 +236,10 @@ class TestPerformance:
             round(accuracy, 2),
             round(f1, 2),
             confusion,
+            test_params,
         )
         if (recall < test_params["THRESHOLD_CRITERIA"]) & (
-            os.environ.get("GITHUB_ACTIONS") is True
+            os.environ.get("GITHUB_ACTIONS") == "true"
         ):
             send_notification(content=alert)
 
