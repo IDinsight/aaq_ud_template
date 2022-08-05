@@ -35,7 +35,7 @@ def generate_message(
         val_message = (
             "[Alert] Recall was {recall}\n"
             "For commit tag = {commit_tag}\n"
-            "On branch = {branch}"
+            "On branch = {branch}\n"
             "On repo = {repo_name}.\n"
             "The recall threshold level is {threshold_criteria}. "
             "The performance was calculated using {dataset}.\n"
