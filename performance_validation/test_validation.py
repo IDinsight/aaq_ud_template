@@ -22,31 +22,21 @@ stopwords.ensure_loaded()
 def generate_message(
     recall, threshold_criteria, precision, accuracy, f1, confusion, test_params
 ):
-    """Generate messages for validation results
-    Warning is set to threshold criteria
-    Parameters
-    ----------
-    result : List[dict]
-        List of commit validation results
-    threshold_criteria : float, 0-1
-        Accuracy cut-off for warnings
-    """
+    """Generate messages for validation results"""
 
     dataset = test_params["DATA_PREFIX"]
 
-    if os.environ.get("GITHUB_ACTIONS"):
+    if os.environ.get("GITHUB_ACTIONS") == "true":
 
         current_branch = os.environ.get("BRANCH")
         repo_name = os.environ.get("REPO")
         commit = os.environ.get("HASH")
-        ref = os.environ.get("REF")
 
         val_message = (
-            "\n[Alert] Recall was {recall} for\n"
-            "{commit_tag}\n with message "
-            "{commit_message}\non "
-            "branch {branch} of "
-            "repo {repo_name}. "
+            "[Alert] Recall was {recall}\n"
+            "For commit tag = {commit_tag}\n"
+            "On branch = {branch}"
+            "On repo = {repo_name}.\n"
             "The recall threshold level is {threshold_criteria}. "
             "The performance was calculated using {dataset}.\n"
             "\nOther Indicators ->\n\n"
@@ -57,7 +47,6 @@ def generate_message(
         ).format(
             accuracy=accuracy,
             commit_tag=commit,
-            commit_message=ref,
             branch=current_branch,
             repo_name=repo_name,
             threshold_criteria=threshold_criteria,
@@ -69,8 +58,8 @@ def generate_message(
         )
     else:
         val_message = (
-            "[Alert] Recall was {recall}."
-            "The recall threshold level is {threshold_criteria}. "
+            "[Alert] Recall was {recall}.\n"
+            "The recall threshold level is {threshold_criteria}.\n"
             "Performance was calculated using {dataset}\n"
             "\nOther Indicators ->\n\n"
             "Precision: {precision},\n"
@@ -242,6 +231,7 @@ class TestPerformance:
             os.environ.get("GITHUB_ACTIONS") == "true"
         ):
             send_notification(content=alert)
+            print(alert)
 
         else:
             print(alert)
