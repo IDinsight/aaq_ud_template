@@ -79,9 +79,12 @@ This command does the following:
 
 You should edit each of the files in `./secrets` and set the correct parameters.
 
--   `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. The databases `$PG_DATABASE` and `$PG_DATABASE-test` and their owners `$PG_USERNAME` and `$PG_USERNAME_test` must exist already.  
--   `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests.
--   Other files should be updated before you can test the instance.
+- `database_secrets.env` is the most important one to complete right now as these details will be used to create tables in the next step. You can set whatever username (usually `flask`) and password you prefer. These details will be used to create the role.
+- `tests/config.yaml` should also be updated. This file is used by `pytest` and is required to run tests locally.
+- `performance_validation/config.yaml` should also be updated. This is used for performance validation of 
+the UD model. To run validation, one needs to also set the Github Actions Secrets for VALIDATION_DATA and
+VALIDATION_RULES.
+- Other files should be updated before you can test the instance.
 
 See `docs/deployment_instructions.md` for more detailed explanations on each secret environment variable.
 

@@ -4,7 +4,7 @@ src_paths = ["core_model"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-rPaq"
+addopts = "-rP"
 testpaths = ["tests"]
 python_files = ["*.py"]
 markers = ["slow: mark test as slow", "fast: mark test as fast"]

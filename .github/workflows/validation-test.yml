@@ -68,3 +68,18 @@ jobs:
           PROMETHEUS_MULTIPROC_DIR: /tmp
         run: |
           pytest tests
+      - name: Run Validation Test
+        env:
+          VALIDATION_BUCKET: ${{secrets.VALIDATION_BUCKET}}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{steps.vars.outputs.branch}}
+          HASH: ${{ github.sha }}
+          REF: ${{ github.ref }}
+          PROMETHEUS_MULTIPROC_DIR: /tmp
+          PG_ENDPOINT: ${{secrets.GA_PG_ENDPOINT}}
+          PG_PASSWORD: ${{secrets.GA_PG_PASSWORD}}
+          UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
+        if: "${{(env.VALIDATION_BUCKET != '')}}"
+        run: |
+          # for testing
+          python -m pytest performance_validation
