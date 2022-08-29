@@ -71,6 +71,7 @@ jobs:
         run: |
           sudo curl -Lo /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
           sudo chmod +x /usr/local/bin/ecs-cli
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -89,6 +90,7 @@ jobs:
           ECR_IMAGE_PATH: ${{ needs.DockerMakeAndPushRelease.outputs.EcrImagePath }}
         run: |
           echo "::set-output name=IMAGE_NAME::${ECR_REGISTRY}/${ECR_IMAGE_PATH}"
+      
       - name: Pull down ECS service
         env:
           PORT: 9903
@@ -100,7 +102,7 @@ jobs:
           -f docker-compose/docker-compose-stg.yml \
           --project-name ${PROJECT_NAME} \
           --cluster-config ${PROJECT_NAME}-config \
-          --cluster ${{ secrets.PROJECT_SHORT_NAME }}-cluster \
+          --cluster ${PROJECT_SHORT_NAME}-cluster \
           service down --timeout 10
         continue-on-error: true
 
@@ -127,12 +129,14 @@ jobs:
           SENTRY_DSN: ${{ secrets.GA_SENTRY_DSN }}
           SENTRY_ENVIRONMENT: ${{ secrets.GA_SENTRY_ENVIRONMENT }}
           SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.GA_SENTRY_TRACES_SAMPLE_RATE }}
+        
         run: |
           ecs-cli configure \
           --cluster ${PROJECT_SHORT_NAME}-cluster \
           --default-launch-type EC2 \
           --region ${AWS_REGION} \
           --config-name ${PROJECT_NAME}-config
+
           PG_DATABASE=${PROJECT_SHORT_NAME} \
           ecs-cli compose \
           -f docker-compose/docker-compose-stg.yml \
