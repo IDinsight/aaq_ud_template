@@ -1,11 +1,8 @@
 name: Docker Make and Push Release Image and Deploy to staging
 on:
-  # release:
-  #   # Only use the types keyword to narrow down the activity types that will trigger your workflow.
-  #   types: [published]
-  push:
-    branches:
-      - ecs_deployment
+  release:
+    # Only use the types keyword to narrow down the activity types that will trigger your workflow.
+    types: [published]
 
 jobs:
   DockerMakeAndPushRelease:
@@ -13,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     env:
-      #IMAGE_NAME: ${{ github.event.repository.name }}:${{ github.event.release.tag_name }}
-      IMAGE_NAME: ${{ github.event.repository.name }}:dev
+      IMAGE_NAME: ${{ github.event.repository.name }}:${{ github.event.release.tag_name }}
     outputs:
       env-name: ${{ steps.env-name.outputs.environment }}
       EcrImagePath: ${{ steps.update-ecr.outputs.EcrImagePath }}
@@ -47,6 +43,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker image tag ${IMAGE_NAME} $ECR_REGISTRY/aaq_solution/${IMAGE_NAME}
+          docker push $ECR_REGISTRY/aaq_solution/$IMAGE_NAME
           echo "::set-output name=EcrImagePath::aaq_solution/${IMAGE_NAME}"
 
   DeployStagingECSCluster:

@@ -4,9 +4,6 @@
 include ./project_config.cfg
 export
 
-include ./secrets/*.env
-export
-
 $(eval NAME=$(PROJECT_NAME))
 $(eval PORT=9904)
 $(eval VERSION=dev)
