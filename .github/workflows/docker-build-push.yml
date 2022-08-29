@@ -96,6 +96,7 @@ jobs:
           PORT: 9903
           IMAGE_NAME: ${{ steps.vars.outputs.IMAGE_NAME }}
         run: |
+          echo "Environment secret is: ${{ secrets.TEST_WORKFLOW_SECRET }}"
           PORT=${PORT} \
           IMAGE_NAME=${IMAGE_NAME} \
           ecs-cli compose \
@@ -106,8 +107,8 @@ jobs:
           service down --timeout 10
         continue-on-error: true
 
-      - name: Sleep for 300 seconds for service to drain
-        run: sleep 300s
+      - name: Sleep for 1 seconds for service to drain
+        run: sleep 1s
         shell: bash
 
       - name: Deploy using ECS CLI
