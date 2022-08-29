@@ -1,7 +1,7 @@
 version: '2'
 services:
     admin:
-        image: ${IMAGE_NAME}
+        image: 678681925278.dkr.ecr.af-south-1.amazonaws.com/aaq_solution/praekelt_mc_ud:v1.0.0
         cpu_shares: 300
         mem_limit: 2048576000
         environment:
