@@ -1,4 +1,4 @@
-name: Docker Make and Push Release Image
+name: Docker Make and Push Release Image and Deploy to staging
 on:
   release:
     # Only use the types keyword to narrow down the activity types that will trigger your workflow.
@@ -6,11 +6,14 @@ on:
 
 jobs:
   DockerMakeAndPushRelease:
+    name: Build docker image and push to ECR
     runs-on: ubuntu-latest
+    environment: staging
     env:
       IMAGE_NAME: ${{ github.event.repository.name }}:${{ github.event.release.tag_name }}
     outputs:
       env-name: ${{ steps.env-name.outputs.environment }}
+      EcrImagePath: ${{ steps.update-ecr.outputs.EcrImagePath }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -35,8 +38,104 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Docker tag and push image to ECR
+        id: update-ecr
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           docker image tag ${IMAGE_NAME} $ECR_REGISTRY/aaq_solution/${IMAGE_NAME}
           docker push $ECR_REGISTRY/aaq_solution/$IMAGE_NAME
+          echo "::set-output name=EcrImagePath::aaq_solution/${IMAGE_NAME}"
+
+  DeployStagingECSCluster:
+    name: Deploy ECS cluster
+    needs: DockerMakeAndPushRelease
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install the ECS CLI
+        run: |
+          sudo curl -Lo /usr/local/bin/ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
+          sudo chmod +x /usr/local/bin/ecs-cli
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Load project config variables
+        id: get-project-config
+        uses: thgbrb/setup-environment@v1
+        with:
+          environment-config-file: "project_config.cfg"
+
+      - name: Configure variables
+        shell: bash
+        id: vars
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_IMAGE_PATH: ${{ needs.DockerMakeAndPushRelease.outputs.EcrImagePath }}
+        run: |
+          echo "::set-output name=IMAGE_NAME::${ECR_REGISTRY}/${ECR_IMAGE_PATH}"
+      - name: Pull down ECS service
+        env:
+          PORT: 9903
+          IMAGE_NAME: ${{ steps.vars.outputs.IMAGE_NAME }}
+        run: |
+          PORT=${PORT} \
+          IMAGE_NAME=${IMAGE_NAME} \
+          ecs-cli compose \
+          -f docker-compose/docker-compose-stg.yml \
+          --project-name ${PROJECT_NAME} \
+          --cluster-config ${PROJECT_NAME}-config \
+          --cluster ${{ secrets.PROJECT_SHORT_NAME }}-cluster \
+          service down --timeout 10
+        continue-on-error: true
+
+      - name: Sleep for 300 seconds for service to drain
+        run: sleep 300s
+        shell: bash
+
+      - name: Deploy using ECS CLI
+        env:
+          PORT: 9904
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          IMAGE_NAME: ${{ steps.vars.outputs.IMAGE_NAME }}
+
+          # app secrets
+          UD_INBOUND_CHECK_TOKEN: ${{ secrets.GA_UD_INBOUND_CHECK_TOKEN }}
+          ENABLE_RULE_REFRESH_CRON: ${{ secrets.GA_ENABLE_RULE_REFRESH_CRON }}
+          PROMETHEUS_MULTIPROC_DIR: ${{ secrets.GA_PROMETHEUS_MULTIPROC_DIR }}
+          # database secrets
+          PG_ENDPOINT: ${{ secrets.GA_PG_ENDPOINT }}
+          PG_PORT: 5432
+          PG_USERNAME: "flask"
+          PG_PASSWORD: ${{ secrets.GA_PG_PASSWORD }}
+          # sentry config
+          SENTRY_DSN: ${{ secrets.GA_SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: ${{ secrets.GA_SENTRY_ENVIRONMENT }}
+          SENTRY_TRACES_SAMPLE_RATE: ${{ secrets.GA_SENTRY_TRACES_SAMPLE_RATE }}
+        run: |
+          ecs-cli configure \
+          --cluster ${PROJECT_SHORT_NAME}-cluster \
+          --default-launch-type EC2 \
+          --region ${AWS_REGION} \
+          --config-name ${PROJECT_NAME}-config
+          PG_DATABASE=${PROJECT_SHORT_NAME} \
+          ecs-cli compose \
+          -f docker-compose/docker-compose-stg.yml \
+          --project-name ${PROJECT_NAME} \
+          --cluster-config ${PROJECT_NAME}-config \
+          --task-role-arn arn:aws:iam::678681925278:role/${PROJECT_SHORT_NAME}-task-role \
+          service up \
+          --create-log-groups \
+          --deployment-min-healthy-percent 0 

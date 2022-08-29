@@ -4,6 +4,9 @@
 include ./project_config.cfg
 export
 
+include ./secrets/*.env
+export
+
 $(eval NAME=$(PROJECT_NAME))
 $(eval PORT=9904)
 $(eval VERSION=dev)
@@ -168,3 +171,28 @@ grafana:
 		-v $(PWD)/monitoring/grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/default.yaml \
 		-v $(PWD)/monitoring/grafana/dashboards:/var/lib/grafana/dashboards \
 		grafana/grafana-oss
+
+container-stg:
+	# Configure ecs-cli options
+	@ecs-cli configure --cluster ${PROJECT_SHORT_NAME}-cluster \
+	--default-launch-type EC2 \
+	--region $(AWS_REGION) \
+	--config-name ${NAME}-config
+
+	@PROJECT_NAME=$(NAME) \
+	PORT=$(PORT) \
+	IMAGE_NAME=$(AWS_ACCOUNT_ID).dkr.ecr.af-south-1.amazonaws.com/aaq_solution/$(NAME):$(VERSION) \
+	AWS_REGION=$(AWS_REGION) \
+	ecs-cli compose -f docker-compose/docker-compose-stg.yml \
+	--project-name ${NAME} \
+	--cluster-config ${NAME}-config \
+	--task-role-arn arn:aws:iam::$(AWS_ACCOUNT_ID):role/${PROJECT_SHORT_NAME}-task-role \
+	service up \
+	--create-log-groups \
+	--deployment-min-healthy-percent 0 
+
+down-stg:
+	@ecs-cli compose \
+	-f docker-compose/docker-compose-stg.yml \
+	--project-name ${NAME} \
+	--cluster-config ${NAME}-config service down
