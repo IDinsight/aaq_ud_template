@@ -1,0 +1,29 @@
+version: '2'
+services:
+    admin:
+        image: ${IMAGE_NAME}
+        cpu_shares: 300
+        mem_limit: 2048576000
+        environment:
+          # app secrets
+          - UD_INBOUND_CHECK_TOKEN=${UD_INBOUND_CHECK_TOKEN}
+          - ENABLE_RULE_REFRESH_CRON=${ENABLE_RULE_REFRESH_CRON}
+          - PROMETHEUS_MULTIPROC_DIR=${PROMETHEUS_MULTIPROC_DIR}
+          # database secrets
+          - PG_ENDPOINT=${PG_ENDPOINT}
+          - PG_PORT=${PG_PORT}
+          - PG_USERNAME=${PG_USERNAME}
+          - PG_PASSWORD=${PG_PASSWORD}
+          - PG_DATABASE=${PG_DATABASE}
+          # sentry config
+          - SENTRY_DSN=${SENTRY_DSN}
+          - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT}
+          - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE}
+        ports:
+            - "${PORT}:${PORT}"
+        logging:
+          driver: awslogs
+          options:
+            awslogs-group: aaq_solution
+            awslogs-region: ${AWS_REGION}
+            awslogs-stream-prefix: ${PROJECT_NAME}
