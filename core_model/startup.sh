@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Script called from parent directory
 
 # Note on root:
