@@ -4,8 +4,7 @@ Create and initialise the app. Uses Blueprints to define view.
 import os
 from functools import partial
 
-from faqt.model.keyword_rule_matching_model import KeywordRule, evaluate_keyword_rules
-from faqt.preprocessing import preprocess_text_for_keyword_rule
+from faqt import KeywordRule, evaluate_keyword_rules, preprocess_text_for_keyword_rule
 from faqt.preprocessing.tokens import CustomHunspell
 from flask import Flask
 from nltk.stem import PorterStemmer

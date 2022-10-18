@@ -84,6 +84,9 @@ target/
 .code_workspace
 .vscode
 
+# PyCharm
+.idea
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
