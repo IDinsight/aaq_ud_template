@@ -4,7 +4,7 @@
 import os
 from functools import wraps
 
-from faqt.model.keyword_rule_matching_model import KeywordRule
+from faqt import KeywordRule
 from flask import abort, current_app, request
 
 from ..prometheus_metrics import metrics
@@ -82,7 +82,7 @@ def check_new_rules():
         current_app.evaluate_rules(x, rule_to_check) for x in preprocessed_text
     ]
 
-    urgency_values = [item * 1 for sublist in urgency_values for item in sublist]
+    urgency_values = [x for sublist in urgency_values for x in sublist]
 
     json_return = dict()
     json_return["preprocessed_include_kws"] = include_preprocessed

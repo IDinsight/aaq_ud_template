@@ -66,8 +66,6 @@ def urgency_check():
     else:
         urgency_score = 0.0
 
-    urgency_values = list(map(float, urgency_values))  # Cast to float
-
     matched_rules = [
         {
             "rule_id": x["rule_id"],
