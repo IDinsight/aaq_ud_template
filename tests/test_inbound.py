@@ -59,7 +59,7 @@ class TestInboundMessage:
             ("I love the melody of the guitar", set()),
         ],
     )
-    def test_inbound_returns_correct_list_of_matched_ruels(
+    def test_inbound_returns_correct_list_of_matched_rules(
         self, client, ud_rule_data, message, expected_matched_rule_titles
     ):
         request_data = {

@@ -136,7 +136,8 @@ def refresh_rules(app):
             "rule_id": x.urgency_rule_id,
             "title": x.urgency_rule_title,
             "rule": KeywordRule(
-                include=x.urgency_rule_tags_include, exclude=x.urgency_rule_tags_exclude
+                include=[s.lower() for s in x.urgency_rule_tags_include],
+                exclude=[s.lower() for s in x.urgency_rule_tags_exclude],
             ),
         }
         for x in rows
