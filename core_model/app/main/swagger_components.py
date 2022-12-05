@@ -18,7 +18,7 @@ authorizations = {
 }
 api = Api(
     main,
-    title="MomConnect AAQ UD API",
+    title="AAQ UD API",
     authorizations=authorizations,
     security="Bearer",
 )
@@ -30,7 +30,7 @@ inbound_check_fields = api.model(
         "text_to_match": fields.String(
             description="The input message text to match",
             required=True,
-            example="is it normal to crave anchovies for breakfast",
+            example="I have a migraine and a headache is it normal?",
         ),
         "metadata": fields.Raw(
             description=(
@@ -53,7 +53,7 @@ urgency_rule = api.model("UrgencyRule", urgency_dict)
 response_dict = {
     "urgency_score": fields.Integer(
         description=(" Urgency score of message (O or 1)"),
-        example=0,
+        example=1,
     ),
     "matched_urgency_rules": fields.List(fields.Nested(urgency_rule)),
     "feedback_secret_key": fields.String(
