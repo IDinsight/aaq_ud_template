@@ -12,7 +12,6 @@ from sqlalchemy.orm.attributes import flag_modified
 from ..data_models import Inbound
 from ..database_sqlalchemy import db
 from ..prometheus_metrics import metrics
-from . import main
 from .auth import auth
 from .swagger_components import (
     api,

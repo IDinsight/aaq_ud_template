@@ -78,6 +78,6 @@ inbound_feedback_fields = api.model(
             description="Secret key found in response to original inbound message",
             example="feedback-secret-123",
         ),
-        "feedback": fields.String(required=True),
+        "feedback": fields.String(required=True, example="feedback test string"),
     },
 )
