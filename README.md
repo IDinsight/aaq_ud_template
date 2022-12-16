@@ -3,15 +3,21 @@
 
 # Ask a Question (AAQ) Urgency Detection (UD) Template Repository
 
-This is the readme for the AAQ UD Template repository. To start development on a new AAQ UD solution, clone or fork this and follow the setup instructions below.
+To start development on a new AAQ UD solution, clone or fork this and follow the setup instructions below.
 
 Ensure to pull in new features from this repository regularly.
 
 ## What is this?
 
-This module is the urgency detection app that receives inbound messages and checks if they are urgent based on the urgency rules.
+This template provides a ready-to-use solution for application for detecting urgency in messages that can
+be used by an existing chat service. It uses the urgency detection tools from the 
+[FAQT](https://github.com/IDinsight/faqt) library.
 
-![Urgency Detection example diagram](./docs/readme/images/urgency_detection.png)
+This application receives inbound messages in json, runs it through a pre-defined
+urgency detection model, and returns the urgency scores (or binary labels) as a response.
+
+
+![AAQ UD](docs/readme/images/aaq_template-ud.png)
 
 ## Setup
 
