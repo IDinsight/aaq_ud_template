@@ -127,8 +127,9 @@ Note the DB connection details and DB secrets as instructed by [`infrastructure/
 - Save the test DB details in `tests/config.yaml`. This file is used by `pytest` and is required to run tests locally.
 
 - Save the test DB details `performance_validation/config.yaml`. This is used for performance validation of 
-the UD model. To run validation, one needs to also set the Github Actions Secrets for VALIDATION_DATA and
-VALIDATION_RULES.
+the UD model. To run validation, one needs to also set the Github Actions Secrets for `VALIDATION_DATA` and
+`VALIDATION_RULES`.
+
 - Other files should be updated before you can test the instance.
 
 See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
