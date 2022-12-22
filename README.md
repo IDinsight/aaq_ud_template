@@ -33,6 +33,9 @@ If you clone this, please set up a new repository for future commits and add thi
     ```
     git clone git@github.com:IDinsight/aaq_ud_template.git <project_name>
     ```
+    ```
+    git clone git@github.com:IDinsight/aaq_ud_template.git <project_name>
+    ```
 
 2. Switch to <project_name> folder and change remote name to `template`
 
@@ -46,9 +49,15 @@ If you clone this, please set up a new repository for future commits and add thi
     ```
     git remote add origin git@github.com:IDinsight/<project_name>.git
     ```
+    ```
+    git remote add origin git@github.com:IDinsight/<project_name>.git
+    ```
 
 5. Set local to track that remote
 
+    ```
+    git push -u origin main
+    ```
     ```
     git push -u origin main
     ```
@@ -61,7 +70,18 @@ If you clone this, please set up a new repository for future commits and add thi
     export PG_DATABASE=
     export PG_USERNAME=
     export PG_PASSWORD=
+    ```
+    export PG_ENDPOINT=
+    export PG_PORT=
+    export PG_DATABASE=
+    export PG_USERNAME=
+    export PG_PASSWORD=
 
+    export UD_INBOUND_CHECK_TOKEN=
+    export TOKEN_MACHINE_USER=
+    export PROMETHEUS_MULTIPROC_DIR=
+    ```
+    See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
     export UD_INBOUND_CHECK_TOKEN=
     export TOKEN_MACHINE_USER=
     export PROMETHEUS_MULTIPROC_DIR=
@@ -89,6 +109,13 @@ not include Urgency Detection app) is currently defined in the
 [aaq_core_template](https://github.com/IDinsight/aaq_core_template) repository. Follow the
 instructions in aaq_core_template's [`infrastructure/README.md`](https://github.com/IDinsight/aaq_core_template/tree/main/infrastructure).
 
+#### Set up infrastructure using terraform
+
+The terraform script to set up the infrastructure for a single AAQ solution (which may or may
+not include Urgency Detection app) is currently defined in the
+[aaq_core_template](https://github.com/IDinsight/aaq_core_template) repository. Follow the
+instructions in aaq_core_template's [`infrastructure/README.md`](https://github.com/IDinsight/aaq_core_template/tree/main/infrastructure).
+
 #### Enter details in secrets file
 
 Edit each of the files in `./secrets` and set the correct parameters.
@@ -100,15 +127,17 @@ Note the DB connection details and DB secrets as instructed by [`infrastructure/
 - Save the test DB details in `tests/config.yaml`. This file is used by `pytest` and is required to run tests locally.
 
 - Save the test DB details `performance_validation/config.yaml`. This is used for performance validation of 
-the UD model. To run validation, one needs to also set the Github Actions Secrets for `VALIDATION_DATA` and
-`VALIDATION_RULES`.
-
+the UD model. To run validation, one needs to also set the Github Actions Secrets for VALIDATION_DATA and
+VALIDATION_RULES.
 - Other files should be updated before you can test the instance.
 
+See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
 See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
 
 #### Run `make setup-ecr`
 
+This creates the ECR repository for the project to store docker images. This step is not
+necessary if you have done this already in another AAQ app (e.g. core).
 This creates the ECR repository for the project to store docker images. This step is not
 necessary if you have done this already in another AAQ app (e.g. core).
 
@@ -133,6 +162,7 @@ Note the secrets setup for this repository in Github. Ensure that these are also
 4. Setup application monitoring
 5. Setup other apps as necessary
 
+## Running the project
 ## Running the project
 
 **Note: Ensure you have updated all the secrets in the files under `/secrets/`.**
