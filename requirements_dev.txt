@@ -4,3 +4,4 @@ isort==5.8.0
 pre-commit==2.11.1
 pytest==6.2.2
 fsspec[s3]==2022.3.0
+coverage==6.3.2

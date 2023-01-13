@@ -8,7 +8,7 @@ on:
 
 jobs:
   ValidateModels:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       env-name: ${{ steps.env-name.outputs.environment }}
     steps:
@@ -69,7 +69,8 @@ jobs:
           UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
           PROMETHEUS_MULTIPROC_DIR: /tmp
         run: |
-          pytest tests
+          coverage run -m pytest tests --durations=0
+          coverage lcov --include="core_model/*"
       - name: Run Validation Test
         env:
           VALIDATION_BUCKET: ${{secrets.VALIDATION_BUCKET}}
@@ -85,3 +86,8 @@ jobs:
         run: |
           # for testing
           python -m pytest performance_validation
+      - name: Coveralls Test Coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage.lcov
