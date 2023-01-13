@@ -1,5 +1,6 @@
-![Coverage Status](https://coveralls.io/repos/github/IDinsight/[your-project]/badge.svg?t=[code])](https://coveralls.io/github/IDinsight/[your-project])
-![Unit Tests](https://github.com/IDinsight/[your-project]/actions/workflows/validation-test.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/IDinsight/aaq_ud_template/badge.svg?t=Ifglck)](https://coveralls.io/github/IDinsight/aaq_ud_template)
+![Unit
+Tests](https://github.com/IDinsight/aaq_ud_template/actions/workflows/validation-test.yml/badge.svg)
 
 # Ask a Question (AAQ) Urgency Detection (UD) Template Repository
 

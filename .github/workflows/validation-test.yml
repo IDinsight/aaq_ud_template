@@ -8,7 +8,7 @@ on:
 
 jobs:
   ValidateModels:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs:
       env-name: ${{ steps.env-name.outputs.environment }}
     steps:
@@ -85,3 +85,8 @@ jobs:
         run: |
           # for testing
           python -m pytest performance_validation
+      - name: Coveralls Test Coverage
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage.lcov
