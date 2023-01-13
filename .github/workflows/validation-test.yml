@@ -69,7 +69,8 @@ jobs:
           UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
           PROMETHEUS_MULTIPROC_DIR: /tmp
         run: |
-          pytest tests
+          coverage run -m pytest tests --durations=0
+          coverage lcov --include="core_model/*"
       - name: Run Validation Test
         env:
           VALIDATION_BUCKET: ${{secrets.VALIDATION_BUCKET}}
