@@ -177,3 +177,84 @@ To run monitoring,
 1. `make prometheus` to run prometheus server on docker
 2. `make grafana` to run grafana server on docker (go to localhost:3000 and login with admin/admin)
 3. `make uptime-exporter` to relay endpoint uptime information to prometheus
+
+
+## Setting up secrets for Github Actions
+
+Github actions scripts in `.github` requires the same or similar secrets as in the
+`secrets` folder.
+
+You can either set them directly as Github Actions secrets, or store them in AWS Secrets
+Manager and dynamically load them during Github Actions.
+
+For both options, you must set AWS credentials as Github Actions secrets:
+```bash
+AWS_ACCESS_KEY_ID
+AWS_REGION
+AWS_SECRET_ACCESS_KEY
+```
+
+### Option 1: Set Github Actions secrets
+If you would like to set Github Actions secrets directly, in addition to AWS credentials above, you must set the following secrets:
+```bash
+# From `secrets/databse_secrets.env`
+GA_PG_ENDPOINT
+GA_PG_PASSWORD
+
+# From `secrets/app_secrets.env`
+GA_INBOUND_CHECK_TOKEN
+
+# If using validation
+VALIDATION_BUCKET  # S3 bucket storing validation data
+VALIDATION_DATA_PREFIX  # Prefix of validation data in the S3 bucket
+VALIDATION_FAQ_PREFIX  # Prefix of FAQ data in the S3 bucket
+```
+
+Make sure to comment out the block of code that uses secrets from AWS, and uncomment the
+block that uses GA secrets in `.github/validation-test.yml` and `.github/docker-build-push.yml`.
+
+### Option 2: Load secrets from AWS Secrets Manger (default)
+If you would like to load secrets from AWS Secrets Manager, make sure that you have the
+following secrets stored on AWS:
+
+1. Urgency detection secrets
+    ```bash
+    # From `secrets/app_secrets.env`
+    UD_INBOUND_CHECK_TOKEN  
+    ENABLE_RULE_REFRESH_CRON
+
+    # If using validation
+    VALIDATION_BUCKET  # S3 bucket storing validation data
+    VALIDATION_DATA_PREFIX  # Prefix of validation data in the S3 bucket
+    VALIDATION_FAQ_PREFIX  # Prefix of FAQ data in the S3 bucket
+    ```
+
+2. Global secrets (to be used also by the admin app, and optionally, UD app)
+    ```bash
+    # From `secrets/databse_secrets.env`
+    PG_ENDPOINT
+    PG_PASSWORD
+    PG_PORT
+    PG_USERNAME
+    PG_DATABASE
+
+    # From `secrets/sentry_config.env`
+    SENTRY_DSN
+    SENTRY_ENVIRONMENT
+    SENTRY_TRACES_SAMPLE_RATE
+    ```
+
+3. Staging DB secrets -- this should be automatically created under the secret named `<PROJECT_SHORT_NAME>-db` if you used terraform.
+    ```bash
+    db_endpoint
+    db_password
+    db_username
+    ```
+
+4. Github machine user token secret
+    ```bash
+    TOKEN_MACHINE_USER
+    ```
+
+Make sure to modify the secrets ARNs in `.github/validation-test.yml` and
+`.github/docker-build-push.yml` to your own ARNs.
