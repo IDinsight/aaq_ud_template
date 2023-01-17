@@ -33,9 +33,6 @@ If you clone this, please set up a new repository for future commits and add thi
     ```
     git clone git@github.com:IDinsight/aaq_ud_template.git <project_name>
     ```
-    ```
-    git clone git@github.com:IDinsight/aaq_ud_template.git <project_name>
-    ```
 
 2. Switch to <project_name> folder and change remote name to `template`
 
@@ -47,17 +44,11 @@ If you clone this, please set up a new repository for future commits and add thi
 4. Add it as remote for local repo
 
     ```
-    git remote add origin git@github.com:IDinsight/<project_name>.git
-    ```
-    ```
-    git remote add origin git@github.com:IDinsight/<project_name>.git
+    git remote add origin git@github.com:<username>/<project_name>.git
     ```
 
 5. Set local to track that remote
 
-    ```
-    git push -u origin main
-    ```
     ```
     git push -u origin main
     ```
@@ -70,22 +61,12 @@ If you clone this, please set up a new repository for future commits and add thi
     export PG_DATABASE=
     export PG_USERNAME=
     export PG_PASSWORD=
-    ```
-    export PG_ENDPOINT=
-    export PG_PORT=
-    export PG_DATABASE=
-    export PG_USERNAME=
-    export PG_PASSWORD=
 
     export UD_INBOUND_CHECK_TOKEN=
     export TOKEN_MACHINE_USER=
     export PROMETHEUS_MULTIPROC_DIR=
     ```
-    See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
-    export UD_INBOUND_CHECK_TOKEN=
-    export TOKEN_MACHINE_USER=
-    export PROMETHEUS_MULTIPROC_DIR=
-    ```
+
     See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
 ### Configure project details
 
@@ -109,12 +90,6 @@ not include Urgency Detection app) is currently defined in the
 [aaq_core_template](https://github.com/IDinsight/aaq_core_template) repository. Follow the
 instructions in aaq_core_template's [`infrastructure/README.md`](https://github.com/IDinsight/aaq_core_template/tree/main/infrastructure).
 
-#### Set up infrastructure using terraform
-
-The terraform script to set up the infrastructure for a single AAQ solution (which may or may
-not include Urgency Detection app) is currently defined in the
-[aaq_core_template](https://github.com/IDinsight/aaq_core_template) repository. Follow the
-instructions in aaq_core_template's [`infrastructure/README.md`](https://github.com/IDinsight/aaq_core_template/tree/main/infrastructure).
 
 #### Enter details in secrets file
 
@@ -133,12 +108,9 @@ the UD model. To run validation, one needs to also set the Github Actions Secret
 - Other files should be updated before you can test the instance.
 
 See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
-See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
 
 #### Run `make setup-ecr`
 
-This creates the ECR repository for the project to store docker images. This step is not
-necessary if you have done this already in another AAQ app (e.g. core).
 This creates the ECR repository for the project to store docker images. This step is not
 necessary if you have done this already in another AAQ app (e.g. core).
 
@@ -156,14 +128,12 @@ Note the secrets setup for this repository in Github. Ensure that these are also
 1. Setup `coveralls`
 2. Setup auto deployment on EC2 (using webhooks or other)
 3. Update this file!
-
     - Remove irrelevant content (all the template text)
     - Update the badges at the top of this file
 
 4. Setup application monitoring
 5. Setup other apps as necessary
 
-## Running the project
 ## Running the project
 
 **Note: Ensure you have updated all the secrets in the files under `/secrets/`.**
@@ -202,12 +172,10 @@ GA_PG_ENDPOINT
 GA_PG_PASSWORD
 
 # From `secrets/app_secrets.env`
-GA_INBOUND_CHECK_TOKEN
+GA_UD_INBOUND_CHECK_TOKEN
 
 # If using validation
 VALIDATION_BUCKET  # S3 bucket storing validation data
-VALIDATION_DATA_PREFIX  # Prefix of validation data in the S3 bucket
-VALIDATION_FAQ_PREFIX  # Prefix of FAQ data in the S3 bucket
 ```
 
 Make sure to comment out the block of code that uses secrets from AWS, and uncomment the
@@ -225,9 +193,8 @@ following secrets stored on AWS:
 
     # If using validation
     VALIDATION_BUCKET  # S3 bucket storing validation data
-    VALIDATION_DATA_PREFIX  # Prefix of validation data in the S3 bucket
-    VALIDATION_FAQ_PREFIX  # Prefix of FAQ data in the S3 bucket
     ```
+    Unlike in the Core app, the validation data prefixes are set in `performance_validation/config.yaml`
 
 2. Global secrets (to be used also by the core and admin apps)
     ```bash
