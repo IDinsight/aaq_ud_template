@@ -229,7 +229,7 @@ following secrets stored on AWS:
     VALIDATION_FAQ_PREFIX  # Prefix of FAQ data in the S3 bucket
     ```
 
-2. Global secrets (to be used also by the admin app, and optionally, UD app)
+2. Global secrets (to be used also by the core and admin apps)
     ```bash
     # From `secrets/databse_secrets.env`
     PG_ENDPOINT
