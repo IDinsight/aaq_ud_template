@@ -2,7 +2,7 @@ name: AAQ Urgency Detection Validation
 on:
   push:
     branches:
-      - 'PNC_728-load-secrets'
+      - '**'
     paths-ignore:
       - '**/*.md'
 
