@@ -4,7 +4,7 @@
 from flask import current_app
 from sqlalchemy.exc import SQLAlchemyError
 
-from .. import refresh_rules
+from .. import refresh_evaluator, refresh_rules
 from ..database_sqlalchemy import db
 from ..prometheus_metrics import metrics
 from . import main
@@ -47,9 +47,11 @@ def refresh_rules_endpoint():
     Must be authenticated
     """
     len_rules = refresh_rules(current_app)
-
+    refresh_evaluator(current_app)
     if len_rules > 0:
+
         message = f"Successfully refreshed {len_rules} urgency rules"
+
     else:
         message = f"Successfully refreshed but could not find urgency rules " f"in DB"
 

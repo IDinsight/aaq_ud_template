@@ -66,28 +66,23 @@ class UrgencyCheck(Resource):
             incoming_metadata = None
 
         raw_text = incoming["text_to_match"]
-        rules = [rule["rule"] for rule in current_app.rules]
-
-        preprocessed_text = current_app.preprocess_text(raw_text)
-        urgency_values = current_app.evaluate_rules(preprocessed_text, rules)
-
-        if len(rules) == 0:
+        if len(current_app.rules) == 0:
             urgency_score = None
-        elif any(urgency_values):
-            urgency_score = 1.0
+            matched_rules = []
         else:
-            urgency_score = 0.0
+            urgency_values = current_app.evaluator.predict_scores(raw_text)
+            urgency_score = current_app.evaluator.predict(raw_text)
 
-        matched_rules = [
-            {
-                "rule_id": x["rule_id"],
-                "title": x["title"],
-                "include": x["rule"].include,
-                "exclude": x["rule"].exclude,
-            }
-            for x, urgency_value in zip(current_app.rules, urgency_values)
-            if urgency_value == 1.0
-        ]
+            matched_rules = [
+                {
+                    "rule_id": x["rule_id"],
+                    "title": x["title"],
+                    "include": x["rule"].include,
+                    "exclude": x["rule"].exclude,
+                }
+                for x, urgency_value in zip(current_app.rules, urgency_values)
+                if urgency_value == 1.0
+            ]
 
         processed_ts = datetime.utcnow()
         feedback_secret_key = b64encode(os.urandom(32)).decode("utf-8")
