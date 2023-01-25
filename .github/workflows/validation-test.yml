@@ -1,5 +1,6 @@
 name: AAQ Urgency Detection Validation
 on:
+  workflow_dispatch:
   push:
     branches:
       - '**'

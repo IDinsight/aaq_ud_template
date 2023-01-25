@@ -1,5 +1,6 @@
 name: Docker Make and Push Release Image and Deploy to staging
 on:
+  workflow_dispatch:
   release:
     # Only use the types keyword to narrow down the activity types that will trigger your workflow.
     types: [published]
