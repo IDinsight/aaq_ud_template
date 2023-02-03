@@ -150,9 +150,3 @@ class DefaultEnvDict(UserDict):
         if value is None:
             raise KeyError(f"{key} not found in dict or environment variables")
         return os.getenv(key)
-
-
-def check_duplicates(existing_titles, title):
-    if title in existing_titles:
-        return True
-    return False
