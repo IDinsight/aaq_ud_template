@@ -5,6 +5,7 @@ import os
 from functools import wraps
 
 from faqt import KeywordRule
+from faqt.model.urgency_detection.urgency_detection_base import RuleBasedUD
 from flask import abort, current_app, request
 
 from ..prometheus_metrics import metrics
@@ -77,10 +78,10 @@ def check_new_rules():
     rule_to_check = [
         KeywordRule(include=include_preprocessed, exclude=exclude_preprocessed)
     ]
-
-    urgency_values = [
-        current_app.evaluate_rules(x, rule_to_check) for x in preprocessed_text
-    ]
+    evaluator = RuleBasedUD(
+        model=rule_to_check, preprocessor=current_app.preprocess_text
+    )
+    urgency_values = [evaluator.predict_scores(x) for x in raw_text]
 
     urgency_values = [x for sublist in urgency_values for x in sublist]
 

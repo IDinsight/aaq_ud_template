@@ -4,7 +4,8 @@ Create and initialise the app. Uses Blueprints to define view.
 import os
 from functools import partial
 
-from faqt import KeywordRule, evaluate_keyword_rules, preprocess_text_for_keyword_rule
+from faqt import KeywordRule, preprocess_text_for_keyword_rule
+from faqt.model.urgency_detection.urgency_detection_base import RuleBasedUD
 from faqt.preprocessing.tokens import CustomHunspell
 from flask import Flask
 from nltk.stem import PorterStemmer
@@ -60,8 +61,8 @@ def setup(app, params):
     metrics.init_app(app)
 
     app.preprocess_text = get_text_preprocessor()
-    app.evaluate_rules = evaluate_keyword_rules
-    refresh_rules(app)
+
+    refresh_rule_based_model(app)
 
 
 def get_config_data(params):
@@ -143,5 +144,12 @@ def refresh_rules(app):
         for x in rows
     ]
     app.rules = rules
+    return rules
 
+
+def refresh_rule_based_model(app):
+    """Add new rules to RuleBasedUD  evaluator"""
+    rules_data = refresh_rules(app)
+    rules = [rule["rule"] for rule in rules_data]
+    app.evaluator = RuleBasedUD(model=rules, preprocessor=app.preprocess_text)
     return len(rules)

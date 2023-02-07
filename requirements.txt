@@ -14,3 +14,4 @@ scipy==1.8.0
 sentry-sdk[flask]==1.5.12
 itsdangerous==2.0.1
 prometheus-flask-exporter==0.20.1
+SQLAlchemy==1.4.37
