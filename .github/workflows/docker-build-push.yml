@@ -16,7 +16,7 @@ jobs:
       env-name: ${{ steps.env-name.outputs.environment }}
       EcrImagePath: ${{ steps.update-ecr.outputs.EcrImagePath }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Configure AWS credentials
