@@ -92,6 +92,8 @@ instructions in aaq_core_template's [`infrastructure/README.md`](https://github.
 
 
 #### Enter details in secrets file
+By running `make setup-dev`, all necessary secrets files with empty secrets will have
+been created under `./secrets`.
 
 Edit each of the files in `./secrets` and set the correct parameters.
 
@@ -102,21 +104,17 @@ Note the DB connection details and DB secrets as instructed by [`infrastructure/
 - Save the test DB details in `tests/config.yaml`. This file is used by `pytest` and is required to run tests locally.
 
 - Save the test DB details `performance_validation/config.yaml`. This is used for performance validation of 
-the UD model. To run validation, one needs to also set the Github Actions Secrets for `VALIDATION_DATA` and
-`VALIDATION_RULES`.
+the UD model.
 
 - Other files should be updated before you can test the instance.
 
-See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
+See `docs/deployment_instructions.md` for more detailed explanations of each secret
+environment variable.
 
 #### Run `make setup-ecr`
 
 This creates the ECR repository for the project to store docker images. This step is not
 necessary if you have done this already in another AAQ app (e.g. core).
-
-#### Setup Github secrets
-
-Note the secrets setup for this repository in Github. Ensure that these are also created in your repo.
 
 ### Configure to context
 
@@ -150,40 +148,22 @@ To run monitoring,
 
 
 ## Setting up secrets for Github Actions
+Github actions scripts in the `.github` folder requires the same or similar secrets as
+in the `secrets` folder.
 
-Github actions scripts in `.github` requires the same or similar secrets as in the
-`secrets` folder.
+By default we assume the secrets are stored in AWS Secrets
+Manager and are dynamically loaded during Github Actions.
 
-You can either set them directly as Github Actions secrets, or store them in AWS Secrets
-Manager and dynamically load them during Github Actions.
-
-For both options, you must set AWS credentials as Github Actions secrets:
+However, you must set your AWS credentials as Github Actions secrets:
 ```bash
 AWS_ACCESS_KEY_ID
 AWS_REGION
 AWS_SECRET_ACCESS_KEY
 ```
 
-### Option 1: Set Github Actions secrets
-If you would like to set Github Actions secrets directly, in addition to AWS credentials above, you must set the following secrets:
-```bash
-# From `secrets/databse_secrets.env`
-GA_PG_ENDPOINT
-GA_PG_PASSWORD
-
-# From `secrets/app_secrets.env`
-GA_UD_INBOUND_CHECK_TOKEN
-
-# If using validation
-VALIDATION_BUCKET  # S3 bucket storing validation data
-```
-
-Make sure to comment out the block of code that uses secrets from AWS, and uncomment the
-block that uses GA secrets in `.github/validation-test.yml` and `.github/docker-build-push.yml`.
-
-### Option 2: Load secrets from AWS Secrets Manger (default)
-If you would like to load secrets from AWS Secrets Manager, make sure that you have the
-following secrets stored on AWS:
+To use AWS Secrets Manager, make sure that you have the following secrets stored on AWS.
+(If you would like to use Github Actions secrets instead, you will need to set the same
+secrets on Github and modify the Github Actions scripts yourself.)
 
 1. Urgency detection secrets
     ```bash
@@ -225,3 +205,8 @@ following secrets stored on AWS:
 
 Make sure to modify the secrets ARNs in `.github/validation-test.yml` and
 `.github/docker-build-push.yml` to your own ARNs.
+
+## Thank you
+
+This has been built for and in collaboration with Praekelt. We are grateful to
+Praekelt for the opportunity to use data science to contribute to their mission.

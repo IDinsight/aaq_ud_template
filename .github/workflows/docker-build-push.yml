@@ -27,7 +27,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ----------------- Comment out if using Github Actions Secrets --------------- #
       - name: Get AWS secrets
         uses: aws-actions/aws-secretsmanager-get-secrets@v1
         with:
@@ -44,20 +43,7 @@ jobs:
             --build-arg TOKEN_MACHINE_USER=${{ env.GH_TOKEN_MACHINE_USER }} \
             -t $IMAGE_NAME \
             ./core_model
-      # ----------------------------------------------------------------------------- #
-
-      # ----------------- Uncomment if using Github Actions Secrets ----------------- #
-      # - name: Build Docker image
-      #   run: |
-      #     cp ./requirements.txt ./core_model/requirements.txt
-      #     docker build --rm \
-      #       --build-arg NAME=${{ github.event.repository.name }} \
-      #       --build-arg PORT=9904 \
-      #       --build-arg TOKEN_MACHINE_USER=${{ secrets.TOKEN_MACHINE_USER }} \
-      #       -t $IMAGE_NAME \
-      #       ./core_model
-      # ----------------------------------------------------------------------------- #
-
+      
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
@@ -131,7 +117,6 @@ jobs:
         run: sleep 300s
         shell: bash
 
-      # ----------------- Comment out if using Github Actions Secrets --------------- #
       - name: Get AWS secrets
         uses: aws-actions/aws-secretsmanager-get-secrets@v1
         with:
@@ -176,27 +161,3 @@ jobs:
           service up \
           --create-log-groups \
           --deployment-min-healthy-percent 0 
-      # ----------------------------------------------------------------------------- #
-
-      # ----------------- Uncomment if using Github Actions Secrets ----------------- #
-      # - name: Deploy using ECS CLI
-      #   env:
-      #     PORT: 9904
-      #     AWS_REGION: ${{ secrets.AWS_REGION }}
-      #     IMAGE_NAME: ${{ steps.vars.outputs.IMAGE_NAME }}
-
-      #     # app secrets
-      #     UD_INBOUND_CHECK_TOKEN: ${{ env.UD_UD_INBOUND_CHECK_TOKEN }}
-      #     ENABLE_RULE_REFRESH_CRON: ${{ env.UD_ENABLE_RULE_REFRESH_CRON }}
-      #     PROMETHEUS_MULTIPROC_DIR: ${{ env.UD_PROMETHEUS_MULTIPROC_DIR }}
-      #     # database secrets
-      #     PG_ENDPOINT: ${{ env.UD_PG_ENDPOINT }}
-      #     PG_PORT: 5432
-      #     PG_USERNAME: "flask"
-      #     PG_PASSWORD: ${{ env.UD_PG_PASSWORD }}
-      #     # sentry config
-      #     SENTRY_DSN: ${{ env.UD_SENTRY_DSN }}
-      #     SENTRY_ENVIRONMENT: ${{ env.UD_SENTRY_ENVIRONMENT }}
-      #     SENTRY_TRACES_SAMPLE_RATE: ${{ env.UD_SENTRY_TRACES_SAMPLE_RATE }}
-      # ----------------------------------------------------------------------------- #
-      
