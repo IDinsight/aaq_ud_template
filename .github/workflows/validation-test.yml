@@ -1,8 +1,9 @@
 name: AAQ Urgency Detection Validation
 on:
+  workflow_dispatch:
   push:
     branches:
-      - "**"
+      - '**'
     paths-ignore:
       - '**/*.md'
 
@@ -12,13 +13,31 @@ jobs:
     outputs:
       env-name: ${{ steps.env-name.outputs.environment }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Install Dependencies with Apt Get
-        run: |
-          sudo apt-get update
-          sudo apt-get install python3.8 jq -y
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Get AWS secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        with:
+          secret-ids: |  # Replace ARNs with your own
+            UD, arn:aws:secretsmanager:af-south-1:678681925278:secret:aaq-template-ud-secrets-KQ82bP
+            GLOBAL, arn:aws:secretsmanager:af-south-1:678681925278:secret:aaq-template-global-secrets-HEQCSO
+            GH, arn:aws:secretsmanager:af-south-1:678681925278:secret:github_machine_user_token-YPuBjA
+          parse-json-secrets: true
+
       - name: Install libraries
         run: |
           pip install -r requirements.txt
@@ -29,63 +48,32 @@ jobs:
           nltk.download('punkt')
           EOF`
           python -c "$nltkdownload"
-          pip install git+https://${{ secrets.TOKEN_MACHINE_USER }}@github.com/IDinsight/faqt.git@v1.0.2
-      - name: Configure AWS credentials
-        id: creds
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Configure variables
-        shell: bash
-        id: vars
-        env:
-          REPO: ${{ github.repository }}
-          HASH: ${{ github.sha }}
-          REF: ${{ github.ref }}
-        run: |
-          # Set variables
-          DROPBOX_TOKEN=${{secrets.DROPBOX_TOKEN}}
-          BRANCH=${REF#refs/heads/}
-          REPOSITORY=`echo $REPO | tr "/" "-"`
-          ENVIRONMENT=$BRANCH-$REPOSITORY-${{ secrets.AWS_REGION }}
-
-          # In this step we are setting variables and persistenting them
-          # into the environment so that they can be utilized in other steps
-          echo "::set-output name=branch::$BRANCH"
-          echo "::set-output name=repository::$REPOSITORY"
-          echo "::set-output name=environment::$ENVIRONMENT"
-          echo "::set-output name=dropbox_token::$DROPBOX_TOKEN"
-          # Output variables to ensure their values are set correctly when ran
-          echo "The region is ${{ secrets.AWS_REGION }}"
-          echo "The repository is $REPOSITORY"
-          echo "The environment is $ENVIRONMENT"
-          echo "The branch is $BRANCH"
+          pip install git+https://${{ env.GH_TOKEN_MACHINE_USER }}@github.com/IDinsight/faqt.git@v1.0.2
       - name: Run Unit Tests
         env:
-          PG_ENDPOINT: ${{secrets.GA_PG_ENDPOINT}}
-          PG_PASSWORD: ${{secrets.GA_PG_PASSWORD}}
-          UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
+          PG_ENDPOINT: ${{env.GLOBAL_PG_ENDPOINT}}
+          PG_PASSWORD: ${{env.GLOBAL_PG_PASSWORD}}
+          UD_INBOUND_CHECK_TOKEN: ${{env.UD_UD_INBOUND_CHECK_TOKEN}}
           PROMETHEUS_MULTIPROC_DIR: /tmp
         run: |
           coverage run -m pytest tests --durations=0
           coverage lcov --include="core_model/*"
       - name: Run Validation Test
         env:
-          VALIDATION_BUCKET: ${{secrets.VALIDATION_BUCKET}}
+          VALIDATION_BUCKET: ${{env.GLOBAL_VALIDATION_BUCKET}}
           REPO: ${{ github.repository }}
           BRANCH: ${{steps.vars.outputs.branch}}
           HASH: ${{ github.sha }}
           REF: ${{ github.ref }}
           PROMETHEUS_MULTIPROC_DIR: /tmp
-          PG_ENDPOINT: ${{secrets.GA_PG_ENDPOINT}}
-          PG_PASSWORD: ${{secrets.GA_PG_PASSWORD}}
-          UD_INBOUND_CHECK_TOKEN: ${{secrets.GA_UD_INBOUND_CHECK_TOKEN}}
+          PG_ENDPOINT: ${{env.GLOBAL_PG_ENDPOINT}}
+          PG_PASSWORD: ${{env.GLOBAL_PG_PASSWORD}}
+          UD_INBOUND_CHECK_TOKEN: ${{env.UD_UD_INBOUND_CHECK_TOKEN}}
         if: "${{(env.VALIDATION_BUCKET != '')}}"
         run: |
           # for testing
           python -m pytest performance_validation
+
       - name: Coveralls Test Coverage
         uses: coverallsapp/github-action@master
         with:
