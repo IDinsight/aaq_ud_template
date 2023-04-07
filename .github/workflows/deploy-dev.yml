@@ -1,0 +1,54 @@
+name: Update dev container on EC2
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  UpdateDevContainer:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: aaq_ud_template
+      VERSION: dev
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v1-node16s
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Get AWS secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        with:
+          secret-ids: |  # Replace ARNs with your own
+            UD, arn:aws:secretsmanager:af-south-1:678681925278:secret:aaq-template-ud-secrets-KQ82bP
+            GH, arn:aws:secretsmanager:af-south-1:678681925278:secret:github_machine_user_token-YPuBjA
+          parse-json-secrets: true
+      - name: Build Docker image
+        run: |
+          cp ./requirements.txt ./core_model/requirements.txt
+          docker build --rm \
+            --build-arg NAME=${IMAGE_NAME} \
+            --build-arg PORT=9904 \
+            --build-arg TOKEN_MACHINE_USER=${{ env.GH_TOKEN_MACHINE_USER }} \
+            -t ${IMAGE_NAME}:${VERSION} \
+            ./core_model
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Docker tag and push image to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker image tag ${IMAGE_NAME}:$VERSION $ECR_REGISTRY/aaq_solution/${IMAGE_NAME}:$VERSION
+          docker push $ECR_REGISTRY/aaq_solution/${IMAGE_NAME}:$VERSION
+      - name: Trigger webhook to redeploy container
+        uses: distributhor/workflow-webhook@v2
+        env:
+          webhook_url: ${{ env.UD_WEBHOOK_URL }}
+          webhook_secret: ${{ env.UD_WEBHOOK_SECRET }}
