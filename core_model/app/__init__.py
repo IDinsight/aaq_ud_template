@@ -164,7 +164,7 @@ def refresh_rule_based_model_cached(app):
         """Wrapper to cache refresh_rules"""
         return refresh_rule_based_model(app)
 
-    def get_ttl_hash(seconds=30):  # TODO: update seconds
+    def get_ttl_hash(seconds=900):  # TODO: update seconds
         """Return the same value within `seconds` time period"""
         return round(time.time() // seconds)
 
