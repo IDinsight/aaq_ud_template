@@ -15,3 +15,4 @@ sentry-sdk[flask]==1.5.12
 itsdangerous==2.0.1
 prometheus-flask-exporter==0.20.1
 SQLAlchemy==1.4.37
+faqt @ git+https://github.com/IDinsight/faqt.git@v1.1.2

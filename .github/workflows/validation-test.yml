@@ -35,7 +35,6 @@ jobs:
           secret-ids: |  # Replace ARNs with your own
             UD, arn:aws:secretsmanager:af-south-1:678681925278:secret:aaq-template-ud-secrets-KQ82bP
             GLOBAL, arn:aws:secretsmanager:af-south-1:678681925278:secret:aaq-template-global-secrets-HEQCSO
-            GH, arn:aws:secretsmanager:af-south-1:678681925278:secret:github_machine_user_token-YPuBjA
           parse-json-secrets: true
 
       - name: Install libraries
@@ -48,7 +47,6 @@ jobs:
           nltk.download('punkt')
           EOF`
           python -c "$nltkdownload"
-          pip install git+https://${{ env.GH_TOKEN_MACHINE_USER }}@github.com/IDinsight/faqt.git@v1.1.1
       - name: Run Unit Tests
         env:
           PG_ENDPOINT: ${{env.GLOBAL_PG_ENDPOINT}}
