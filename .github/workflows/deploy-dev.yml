@@ -27,7 +27,6 @@ jobs:
         with:
           secret-ids: |  # Replace ARNs with your own
             UD, arn:aws:secretsmanager:af-south-1:678681925278:secret:aaq-template-ud-secrets-KQ82bP
-            GH, arn:aws:secretsmanager:af-south-1:678681925278:secret:github_machine_user_token-YPuBjA
           parse-json-secrets: true
       - name: Build Docker image
         run: |
@@ -35,7 +34,6 @@ jobs:
           docker build --rm \
             --build-arg NAME=${IMAGE_NAME} \
             --build-arg PORT=9904 \
-            --build-arg TOKEN_MACHINE_USER=${{ env.GH_TOKEN_MACHINE_USER }} \
             -t ${IMAGE_NAME}:${VERSION} \
             ./core_model
       - name: Login to Amazon ECR

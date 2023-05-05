@@ -2,7 +2,8 @@
 Create and initialise the app. Uses Blueprints to define view.
 """
 import os
-from functools import partial
+import time
+from functools import lru_cache, partial
 
 from faqt import KeywordRule, preprocess_text_for_keyword_rule
 from faqt.model.urgency_detection.urgency_detection_base import RuleBasedUD
@@ -62,7 +63,7 @@ def setup(app, params):
 
     app.preprocess_text = get_text_preprocessor()
 
-    refresh_rule_based_model(app)
+    app.cached_rule_based_model_func = cached_rules_wrapper(app)
 
 
 def get_config_data(params):
@@ -153,3 +154,28 @@ def refresh_rule_based_model(app):
     rules = [rule["rule"] for rule in rules_data]
     app.evaluator = RuleBasedUD(model=rules, preprocessor=app.preprocess_text)
     return len(rules)
+
+
+def cached_rules_wrapper(app):
+    """Wrapper to cached rule based model"""
+
+    @lru_cache(maxsize=1)
+    def cached_rules(ttl_hash):
+        """
+        Caches `refresh_rule_based_model` results
+        """
+        n_rules = refresh_rule_based_model(app)
+        return n_rules
+
+    return cached_rules
+
+
+def get_ttl_hash(seconds=3600):
+    """Return the same value within `seconds` time period"""
+    return time.time() // seconds
+
+
+def refresh_rule_based_model_cached(app):
+    """Add new rules to RuleBasedUD  evaluator"""
+
+    return app.cached_rule_based_model_func(ttl_hash=get_ttl_hash())
