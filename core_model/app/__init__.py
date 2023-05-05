@@ -63,7 +63,7 @@ def setup(app, params):
 
     app.preprocess_text = get_text_preprocessor()
 
-    refresh_rule_based_model(app)
+    app.cached_rule_based_model_func = cached_rules_wrapper(app)
 
 
 def get_config_data(params):
@@ -156,16 +156,26 @@ def refresh_rule_based_model(app):
     return len(rules)
 
 
+def cached_rules_wrapper(app):
+    """Wrapper to cached rule based model"""
+
+    @lru_cache(maxsize=1)
+    def cached_rules(ttl_hash):
+        """
+        Caches `refresh_rule_based_model` results
+        """
+        n_rules = refresh_rule_based_model(app)
+        return n_rules
+
+    return cached_rules
+
+
+def get_ttl_hash(seconds=3600):
+    """Return the same value within `seconds` time period"""
+    return time.time() // seconds
+
+
 def refresh_rule_based_model_cached(app):
     """Add new rules to RuleBasedUD  evaluator"""
 
-    @lru_cache(maxsize=1)
-    def cached_refresh_rule_based_model(ttl_hash):
-        """Wrapper to cache refresh_rules"""
-        return refresh_rule_based_model(app)
-
-    def get_ttl_hash(seconds=900):  # TODO: update seconds
-        """Return the same value within `seconds` time period"""
-        return round(time.time() // seconds)
-
-    return cached_refresh_rule_based_model(ttl_hash=get_ttl_hash())
+    return app.cached_rule_based_model_func(ttl_hash=get_ttl_hash())
