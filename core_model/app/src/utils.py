@@ -2,6 +2,7 @@
 General utility functions
 """
 import os
+import time
 from collections import UserDict
 from pathlib import Path
 
@@ -149,4 +150,9 @@ class DefaultEnvDict(UserDict):
         value = os.getenv(key)
         if value is None:
             raise KeyError(f"{key} not found in dict or environment variables")
-        return os.getenv(key)
+        return value
+
+
+def get_ttl_hash(seconds=3600):
+    """Return the same value within `seconds` time period"""
+    return time.time() // seconds

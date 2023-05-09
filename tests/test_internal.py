@@ -60,12 +60,14 @@ class TestRefresh:
             db_connection.execute(t)
         client.get("/internal/refresh-rules", headers=self.headers)
 
-    def test_refresh_of_four_rules(self, load_rule_data, client, db_engine):
-        response = client.get("/internal/refresh-rules", headers=self.headers)
+    def test_refresh_of_four_rules(self, load_rule_data, client_no_refresh, db_engine):
+        response = client_no_refresh.get(
+            "/internal/refresh-rules", headers=self.headers
+        )
         assert response.status_code == 200
         assert response.get_data() == b"Successfully refreshed 4 urgency rules"
 
-    def test_refresh_of_zero_rules(self, client, db_engine):
+    def test_refresh_of_zero_rules(self, client_no_refresh, db_engine):
         response = client.get("/internal/refresh-rules", headers=self.headers)
         assert response.status_code == 200
         assert (

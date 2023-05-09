@@ -63,8 +63,8 @@ If you clone this, please set up a new repository for future commits and add thi
     export PG_PASSWORD=
 
     export UD_INBOUND_CHECK_TOKEN=
-    export TOKEN_MACHINE_USER=
     export PROMETHEUS_MULTIPROC_DIR=
+    export RULE_REFRESH_FREQ=
     ```
 
     See `docs/deployment_instructions.md` for more detailed explanations of each secret environment variable.
@@ -170,6 +170,8 @@ secrets on Github and modify the Github Actions scripts yourself.)
     # From `secrets/app_secrets.env`
     UD_INBOUND_CHECK_TOKEN  
     ENABLE_RULE_REFRESH_CRON
+    PROMETHEUS_MULTIPROC_DIR
+    RULE_REFRESH_FREQ
 
     # If using validation
     VALIDATION_BUCKET  # S3 bucket storing validation data
@@ -196,11 +198,6 @@ secrets on Github and modify the Github Actions scripts yourself.)
     db_endpoint
     db_password
     db_username
-    ```
-
-4. Github machine user token secret
-    ```bash
-    TOKEN_MACHINE_USER
     ```
 
 Make sure to modify the secrets ARNs in `.github/validation-test.yml` and

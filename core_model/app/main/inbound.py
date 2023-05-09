@@ -9,10 +9,10 @@ from flask import current_app, request
 from flask_restx import Resource
 from sqlalchemy.orm.attributes import flag_modified
 
-from .. import refresh_rule_based_model_cached
 from ..data_models import Inbound
 from ..database_sqlalchemy import db
 from ..prometheus_metrics import metrics
+from ..src.utils import get_ttl_hash
 from .auth import auth
 from .swagger_components import (
     api,
@@ -59,8 +59,10 @@ class UrgencyCheck(Resource):
         See class docstring for details.
         """
         received_ts = datetime.utcnow()
-
-        n_rules = refresh_rule_based_model_cached(current_app)
+        if current_app.config["RULE_REFRESH_FREQ"] > 0:
+            current_app.cached_rule_refresh(
+                get_ttl_hash(current_app.config["RULE_REFRESH_FREQ"])
+            )
 
         incoming = request.json
         if "metadata" in incoming:

@@ -55,6 +55,7 @@ def setup(app, params):
             "pool_pre_ping": True,
             "pool_recycle": 300,
         },
+        RULE_REFRESH_FREQ=int(config["RULE_REFRESH_FREQ"]),
         **config,
     )
 
@@ -62,6 +63,7 @@ def setup(app, params):
     metrics.init_app(app)
 
     app.preprocess_text = get_text_preprocessor()
+    app.cached_rule_refresh = cached_rule_based_model_wrapper(app)
 
     refresh_rule_based_model(app)
 
@@ -156,16 +158,15 @@ def refresh_rule_based_model(app):
     return len(rules)
 
 
-def refresh_rule_based_model_cached(app):
-    """Add new rules to RuleBasedUD  evaluator"""
+def cached_rule_based_model_wrapper(app):
+    """Wrapper to cached faqs func"""
 
     @lru_cache(maxsize=1)
-    def cached_refresh_rule_based_model(ttl_hash):
-        """Wrapper to cache refresh_rules"""
-        return refresh_rule_based_model(app)
+    def cached_rule_based_model(ttl_hash):
+        """
+        Caches `refresh_faqs` results
+        """
+        n_rules = refresh_rule_based_model(app)
+        return n_rules
 
-    def get_ttl_hash(seconds=30):  # TODO: update seconds
-        """Return the same value within `seconds` time period"""
-        return round(time.time() // seconds)
-
-    return cached_refresh_rule_based_model(ttl_hash=get_ttl_hash())
+    return cached_rule_based_model
