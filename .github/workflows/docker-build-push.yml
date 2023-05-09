@@ -128,6 +128,7 @@ jobs:
           UD_INBOUND_CHECK_TOKEN: ${{ env.UD_UD_INBOUND_CHECK_TOKEN }}
           ENABLE_RULE_REFRESH_CRON: ${{ env.UD_ENABLE_RULE_REFRESH_CRON }}
           PROMETHEUS_MULTIPROC_DIR: ${{ env.UD_PROMETHEUS_MULTIPROC_DIR }}
+          RULE_REFRESH_FREQ: $${{ env.RULE_REFRESH_FREQ }}
           # database secrets
           PG_ENDPOINT: ${{ env.STG_DB_PG_ENDPOINT }}
           PG_PORT: 5432
