@@ -1,52 +1,57 @@
 import os
+from time import sleep
 
 import pytest
 from sqlalchemy import text
 
+from core_model import app
+from core_model.app import refresh_rule_based_model
+
+insert_rule = (
+    "INSERT INTO urgency_rules ("
+    "urgency_rule_tags_include, urgency_rule_tags_exclude, "
+    "urgency_rule_author, urgency_rule_title, "
+    "urgency_rule_added_utc) "
+    "VALUES (:rule_include, :rule_exclude, :author, :title, "
+    ":added_utc)"
+)
+ud_rules = [  # (title, include, exclude)
+    ("music", """{"rock", "guitar", "melodi"}""", """{}"""),
+    ("guitar_hike", """{"guitar", "hike"}""", """{"melodi"}"""),
+    ("hiking", """{"rock", "lake", "hike"}""", """{}"""),
+    ("no_love", """{}""", """{"love"}"""),
+]
+ud_rule_other_params = {
+    "added_utc": "2022-05-02",
+    "author": "Pytest author",
+    "content": "{}",
+}
+headers = {"Authorization": "Bearer %s" % os.getenv("UD_INBOUND_CHECK_TOKEN")}
+
+
+@pytest.fixture
+def ud_rule_data(client, db_engine):
+    with db_engine.connect() as db_connection:
+        inbound_sql = text(insert_rule)
+        for i, rule_info in enumerate(ud_rules):
+            db_connection.execute(
+                inbound_sql,
+                title=rule_info[0],
+                rule_include=rule_info[1],
+                rule_exclude=rule_info[2],
+                **ud_rule_other_params,
+            )
+    client.get("/internal/refresh-rules", headers=headers)
+    yield
+    with db_engine.connect() as db_connection:
+        t = text(
+            "DELETE FROM urgency_rules " "WHERE urgency_rule_author='Pytest author'"
+        )
+        db_connection.execute(t)
+    client.get("/internal/refresh-rules", headers=headers)
+
 
 class TestInboundMessage:
-    insert_rule = (
-        "INSERT INTO urgency_rules ("
-        "urgency_rule_tags_include, urgency_rule_tags_exclude, "
-        "urgency_rule_author, urgency_rule_title, "
-        "urgency_rule_added_utc) "
-        "VALUES (:rule_include, :rule_exclude, :author, :title, "
-        ":added_utc)"
-    )
-    ud_rules = [  # (title, include, exclude)
-        ("music", """{"rock", "guitar", "melodi"}""", """{}"""),
-        ("guitar_hike", """{"guitar", "hike"}""", """{"melodi"}"""),
-        ("hiking", """{"rock", "lake", "hike"}""", """{}"""),
-        ("no_love", """{}""", """{"love"}"""),
-    ]
-    ud_rule_other_params = {
-        "added_utc": "2022-05-02",
-        "author": "Pytest author",
-        "content": "{}",
-    }
-    headers = {"Authorization": "Bearer %s" % os.getenv("UD_INBOUND_CHECK_TOKEN")}
-
-    @pytest.fixture
-    def ud_rule_data(self, client, db_engine):
-        with db_engine.connect() as db_connection:
-            inbound_sql = text(self.insert_rule)
-            for i, rule_info in enumerate(self.ud_rules):
-                db_connection.execute(
-                    inbound_sql,
-                    title=rule_info[0],
-                    rule_include=rule_info[1],
-                    rule_exclude=rule_info[2],
-                    **self.ud_rule_other_params,
-                )
-        client.get("/internal/refresh-rules", headers=self.headers)
-        yield
-        with db_engine.connect() as db_connection:
-            t = text(
-                "DELETE FROM urgency_rules " "WHERE urgency_rule_author='Pytest author'"
-            )
-            db_connection.execute(t)
-        client.get("/internal/refresh-rules", headers=self.headers)
-
     @pytest.mark.parametrize(
         "message, expected_matched_rule_titles",
         [
@@ -65,9 +70,7 @@ class TestInboundMessage:
         request_data = {
             "text_to_match": message,
         }
-        response = client.post(
-            "/inbound/check", json=request_data, headers=self.headers
-        )
+        response = client.post("/inbound/check", json=request_data, headers=headers)
         json_data = response.get_json()
 
         matched_rule_titles = {x["title"] for x in json_data["matched_urgency_rules"]}
@@ -79,9 +82,7 @@ class TestInboundMessage:
         information? \U0001f600
         πλέων ἐπὶ οἴνοπα πόντον ἐπ᾽ ἀλλοθρόους ἀνθρώπους, ἐς Τεμέσην""",
         }
-        response = client.post(
-            "/inbound/check", json=request_data, headers=self.headers
-        )
+        response = client.post("/inbound/check", json=request_data, headers=headers)
         json_data = response.get_json()
         assert "inbound_id" in json_data
         assert "urgency_score" in json_data
@@ -94,9 +95,7 @@ class TestInboundMessage:
         information? \U0001f600
         πλέων ἐπὶ οἴνοπα πόντον ἐπ᾽ ἀλλοθρόους ἀνθρώπους, ἐς Τεμέσην""",
         }
-        response = client.post(
-            "/inbound/check", json=request_data, headers=self.headers
-        )
+        response = client.post("/inbound/check", json=request_data, headers=headers)
         json_data = response.get_json()
         assert json_data["urgency_score"] is None
         assert len(json_data["matched_urgency_rules"]) == 0
@@ -145,9 +144,7 @@ class TestInboundFeedback:
     def test_inbound_feedback_nonexistent_id(self, client):
         request_data = {"inbound_id": 0, "feedback_secret_key": "abcde", "feedback": ""}
 
-        response = client.put(
-            "/inbound/feedback", json=request_data, headers=self.headers
-        )
+        response = client.put("/inbound/feedback", json=request_data, headers=headers)
         assert response.status_code == 404
         assert response.data == b"No Matches"
 
@@ -157,9 +154,7 @@ class TestInboundFeedback:
             "feedback_secret_key": "wrong_secret_key",
             "feedback": "",
         }
-        response = client.put(
-            "/inbound/feedback", json=request_data, headers=self.headers
-        )
+        response = client.put("/inbound/feedback", json=request_data, headers=headers)
         assert response.status_code == 403
         assert response.data == b"Incorrect Feedback Secret Key"
 
@@ -170,8 +165,109 @@ class TestInboundFeedback:
             "feedback": "test_feedback",
         }
 
-        response = client.put(
-            "/inbound/feedback", json=request_data, headers=self.headers
-        )
+        response = client.put("/inbound/feedback", json=request_data, headers=headers)
         assert response.status_code == 200
         assert response.data == b"Success"
+
+
+class TestInboundCachedRefreshes:
+    @pytest.mark.parametrize(
+        "hash_value",
+        [20, 22],
+    )
+    def test_refreshes_are_run(
+        self, monkeypatch, capsys, ud_rule_data, client, hash_value
+    ):
+        def _fake_refresh(*args, **kwargs):
+            print("Refreshed")
+
+        monkeypatch.setattr(app, "refresh_rule_based_model", _fake_refresh)
+        monkeypatch.setattr(
+            app.main.inbound,
+            "get_ttl_hash",
+            lambda *x, **y: hash_value,
+        )
+
+        request_data = {
+            "text_to_match": "I love going hiking. What should I pack for lunch?"
+        }
+        client.post("/inbound/check", json=request_data, headers=headers)
+        captured = capsys.readouterr()
+
+        assert captured.out == "Refreshed\n"
+
+        sleep(5)
+
+    @pytest.mark.parametrize(
+        "hash_value,expected_output",
+        [
+            (1, "Refreshed"),
+            (1, ""),
+            (3, "Refreshed"),
+            (3, ""),
+            (1, "Refreshed"),
+            (1, ""),
+        ],
+    )
+    def test_faqs_refreshed_only_on_new_hash(
+        self,
+        monkeypatch,
+        capsys,
+        ud_rule_data,
+        client,
+        hash_value,
+        expected_output,
+    ):
+        def _fake_refresh(*args, **kwargs):
+            print("Refreshed")
+
+        monkeypatch.setattr(app, "refresh_rule_based_model", _fake_refresh)
+        monkeypatch.setattr(
+            app.main.inbound,
+            "get_ttl_hash",
+            lambda *x, **y: hash_value,
+        )
+        request_data = {
+            "text_to_match": "I love going hiking. What should I pack for lunch?",
+        }
+        client.post("/inbound/check", json=request_data, headers=headers)
+        captured = capsys.readouterr()
+
+        assert captured.out.strip() == expected_output
+
+    @pytest.mark.parametrize(
+        "hash_value,expected_output",
+        [
+            (10, "Refreshed"),
+            (10, ""),
+            (30, "Refreshed"),
+            (30, ""),
+            (10, "Refreshed"),
+            (10, ""),
+        ],
+    )
+    def test_lang_contexts_refreshed_only_on_new_hash(
+        self,
+        monkeypatch,
+        capsys,
+        ud_rule_data,
+        client,
+        hash_value,
+        expected_output,
+    ):
+        def _fake_refresh(*args, **kwargs):
+            print("Refreshed")
+
+        monkeypatch.setattr(app, "refresh_rule_based_model", _fake_refresh)
+        monkeypatch.setattr(
+            app.main.inbound,
+            "get_ttl_hash",
+            lambda *x, **y: hash_value,
+        )
+        request_data = {
+            "text_to_match": "I love going hiking. What should I pack for lunch?",
+        }
+        client.post("/inbound/check", json=request_data, headers=headers)
+        captured = capsys.readouterr()
+
+        assert captured.out.strip() == expected_output

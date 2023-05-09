@@ -1,6 +1,6 @@
-June 28, 2022
+May 9, 2023
 
-CURRENT VERSION: aaq_ud_template:v1.0.0
+CURRENT VERSION: aaq_ud_template:v1.3.1
 
 # Deploying the AAQ Urgency Detection App (Template)
 
@@ -8,14 +8,15 @@ This is the deployment instructions for the **Urgency Detection App**. It does n
 
 ![image](images/aaq_template-Architecture_ud.png)
 
-# Initial setup
+# DB set up and upgrade
 
-Setup DB tables using `scripts/ud_tables.sql`.
+1. Setup DB tables using `scripts/ud_tables.sql`.
+2. If the tables are already done, upgrade the tables using the given migration script.
 
 # Images
 
 The Docker image for the urgency detection model server is hosted on AWS ECR at
-`[AWS_ACCOUNT_ID].dkr.ecr.af-south-1.amazonaws.com/aaq_solution/aaq_ud_template:v1.0.0`
+`[AWS_ACCOUNT_ID].dkr.ecr.af-south-1.amazonaws.com/aaq_solution/aaq_ud_template:v1.3.1`
 
 Your AWS user will need access to this resource. Please contact IDinsight for access.
 
@@ -47,7 +48,9 @@ The following environment variables are required when running the container:
     - For production, this should be set to `DEPLOYMENT_ENV=PRODUCTION`, which disables the endpoints `/tools/check-new-rules` and `/tools/validate-rule` for stability.
     - Note that the admin app (based on `aaq_admin_template`) depends on `aaq_ud_template` endpoints that are disabled if `DEPLOYMENT_ENV=PRODUCTION`. Thus, the admin app should always be a non-production instance of the urgency detection app.
 - `ENABLE_RULE_REFRESH_CRON`: Only set to "true" if you'd like to run a cron job within the containers to periodically refresh urgency rules.
-- `PROMETHEUS_MULTIPROC_DIR`: Directory to save prometheus metrics collected by multiple processes. It should be a directory that is cleared regularly (e.g. `/tmp`)
+- `PROMETHEUS_MULTIPROC_DIR`: Directory to save prometheus metrics collected by multiple
+  processes. It should be a directory that is cleared regularly (e.g. `/tmp`)
+- `RULE_REFRESH_FREQ`: Frequency at which to refresh UD rules from DB in seconds
 
 ### Jobs
 

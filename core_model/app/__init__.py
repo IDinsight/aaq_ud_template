@@ -2,7 +2,6 @@
 Create and initialise the app. Uses Blueprints to define view.
 """
 import os
-import time
 from functools import lru_cache, partial
 
 from faqt import KeywordRule, preprocess_text_for_keyword_rule
@@ -46,6 +45,7 @@ def setup(app, params):
         params = {}
 
     config = get_config_data(params)
+    config.update({"RULE_REFRESH_FREQ": int(config["RULE_REFRESH_FREQ"])})
 
     app.config.from_mapping(
         JSON_SORT_KEYS=False,
@@ -62,8 +62,7 @@ def setup(app, params):
     metrics.init_app(app)
 
     app.preprocess_text = get_text_preprocessor()
-
-    app.cached_rule_based_model_func = cached_rules_wrapper(app)
+    app.cached_rule_refresh = cached_rule_based_model_wrapper(app)
 
 
 def get_config_data(params):
@@ -156,26 +155,15 @@ def refresh_rule_based_model(app):
     return len(rules)
 
 
-def cached_rules_wrapper(app):
-    """Wrapper to cached rule based model"""
+def cached_rule_based_model_wrapper(app):
+    """Wrapper to cached faqs func"""
 
     @lru_cache(maxsize=1)
-    def cached_rules(ttl_hash):
+    def cached_rule_based_model(ttl_hash):
         """
-        Caches `refresh_rule_based_model` results
+        Caches `refresh_faqs` results
         """
         n_rules = refresh_rule_based_model(app)
         return n_rules
 
-    return cached_rules
-
-
-def get_ttl_hash(seconds=3600):
-    """Return the same value within `seconds` time period"""
-    return time.time() // seconds
-
-
-def refresh_rule_based_model_cached(app):
-    """Add new rules to RuleBasedUD  evaluator"""
-
-    return app.cached_rule_based_model_func(ttl_hash=get_ttl_hash())
+    return cached_rule_based_model
