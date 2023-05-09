@@ -128,7 +128,6 @@ image:
 	@docker build --rm \
 		--build-arg NAME=$(NAME) \
 		--build-arg PORT=$(PORT) \
-		--build-arg TOKEN_MACHINE_USER=$(TOKEN_MACHINE_USER) \
 		-t $(NAME):$(VERSION) \
 		./core_model
 

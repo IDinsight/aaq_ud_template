@@ -2,7 +2,6 @@
 Create and initialise the app. Uses Blueprints to define view.
 """
 import os
-import time
 from functools import lru_cache, partial
 
 from faqt import KeywordRule, preprocess_text_for_keyword_rule
@@ -46,6 +45,7 @@ def setup(app, params):
         params = {}
 
     config = get_config_data(params)
+    config.update({"RULE_REFRESH_FREQ": int(config["RULE_REFRESH_FREQ"])})
 
     app.config.from_mapping(
         JSON_SORT_KEYS=False,
@@ -55,7 +55,6 @@ def setup(app, params):
             "pool_pre_ping": True,
             "pool_recycle": 300,
         },
-        RULE_REFRESH_FREQ=int(config["RULE_REFRESH_FREQ"]),
         **config,
     )
 
@@ -64,8 +63,6 @@ def setup(app, params):
 
     app.preprocess_text = get_text_preprocessor()
     app.cached_rule_refresh = cached_rule_based_model_wrapper(app)
-
-    refresh_rule_based_model(app)
 
 
 def get_config_data(params):

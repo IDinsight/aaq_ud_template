@@ -68,7 +68,9 @@ class TestRefresh:
         assert response.get_data() == b"Successfully refreshed 4 urgency rules"
 
     def test_refresh_of_zero_rules(self, client_no_refresh, db_engine):
-        response = client.get("/internal/refresh-rules", headers=self.headers)
+        response = client_no_refresh.get(
+            "/internal/refresh-rules", headers=self.headers
+        )
         assert response.status_code == 200
         assert (
             response.get_data()

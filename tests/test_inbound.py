@@ -30,25 +30,25 @@ headers = {"Authorization": "Bearer %s" % os.getenv("UD_INBOUND_CHECK_TOKEN")}
 
 
 @pytest.fixture
-def ud_rule_data(self, client, db_engine):
+def ud_rule_data(client, db_engine):
     with db_engine.connect() as db_connection:
-        inbound_sql = text(self.insert_rule)
-        for i, rule_info in enumerate(self.ud_rules):
+        inbound_sql = text(insert_rule)
+        for i, rule_info in enumerate(ud_rules):
             db_connection.execute(
                 inbound_sql,
                 title=rule_info[0],
                 rule_include=rule_info[1],
                 rule_exclude=rule_info[2],
-                **self.ud_rule_other_params,
+                **ud_rule_other_params,
             )
-    client.get("/internal/refresh-rules", headers=self.headers)
+    client.get("/internal/refresh-rules", headers=headers)
     yield
     with db_engine.connect() as db_connection:
         t = text(
             "DELETE FROM urgency_rules " "WHERE urgency_rule_author='Pytest author'"
         )
         db_connection.execute(t)
-    client.get("/internal/refresh-rules", headers=self.headers)
+    client.get("/internal/refresh-rules", headers=headers)
 
 
 class TestInboundMessage:
@@ -70,9 +70,7 @@ class TestInboundMessage:
         request_data = {
             "text_to_match": message,
         }
-        response = client.post(
-            "/inbound/check", json=request_data, headers=self.headers
-        )
+        response = client.post("/inbound/check", json=request_data, headers=headers)
         json_data = response.get_json()
 
         matched_rule_titles = {x["title"] for x in json_data["matched_urgency_rules"]}
@@ -84,9 +82,7 @@ class TestInboundMessage:
         information? \U0001f600
         πλέων ἐπὶ οἴνοπα πόντον ἐπ᾽ ἀλλοθρόους ἀνθρώπους, ἐς Τεμέσην""",
         }
-        response = client.post(
-            "/inbound/check", json=request_data, headers=self.headers
-        )
+        response = client.post("/inbound/check", json=request_data, headers=headers)
         json_data = response.get_json()
         assert "inbound_id" in json_data
         assert "urgency_score" in json_data
@@ -99,9 +95,7 @@ class TestInboundMessage:
         information? \U0001f600
         πλέων ἐπὶ οἴνοπα πόντον ἐπ᾽ ἀλλοθρόους ἀνθρώπους, ἐς Τεμέσην""",
         }
-        response = client.post(
-            "/inbound/check", json=request_data, headers=self.headers
-        )
+        response = client.post("/inbound/check", json=request_data, headers=headers)
         json_data = response.get_json()
         assert json_data["urgency_score"] is None
         assert len(json_data["matched_urgency_rules"]) == 0
@@ -150,9 +144,7 @@ class TestInboundFeedback:
     def test_inbound_feedback_nonexistent_id(self, client):
         request_data = {"inbound_id": 0, "feedback_secret_key": "abcde", "feedback": ""}
 
-        response = client.put(
-            "/inbound/feedback", json=request_data, headers=self.headers
-        )
+        response = client.put("/inbound/feedback", json=request_data, headers=headers)
         assert response.status_code == 404
         assert response.data == b"No Matches"
 
@@ -162,9 +154,7 @@ class TestInboundFeedback:
             "feedback_secret_key": "wrong_secret_key",
             "feedback": "",
         }
-        response = client.put(
-            "/inbound/feedback", json=request_data, headers=self.headers
-        )
+        response = client.put("/inbound/feedback", json=request_data, headers=headers)
         assert response.status_code == 403
         assert response.data == b"Incorrect Feedback Secret Key"
 
@@ -175,9 +165,7 @@ class TestInboundFeedback:
             "feedback": "test_feedback",
         }
 
-        response = client.put(
-            "/inbound/feedback", json=request_data, headers=self.headers
-        )
+        response = client.put("/inbound/feedback", json=request_data, headers=headers)
         assert response.status_code == 200
         assert response.data == b"Success"
 
@@ -203,7 +191,6 @@ class TestInboundCachedRefreshes:
         request_data = {
             "text_to_match": "I love going hiking. What should I pack for lunch?"
         }
-        headers = {"Authorization": "Bearer %s" % os.getenv("INBOUND_CHECK_TOKEN")}
         client.post("/inbound/check", json=request_data, headers=headers)
         captured = capsys.readouterr()
 
@@ -243,7 +230,6 @@ class TestInboundCachedRefreshes:
         request_data = {
             "text_to_match": "I love going hiking. What should I pack for lunch?",
         }
-        headers = {"Authorization": "Bearer %s" % os.getenv("INBOUND_CHECK_TOKEN")}
         client.post("/inbound/check", json=request_data, headers=headers)
         captured = capsys.readouterr()
 
@@ -281,7 +267,6 @@ class TestInboundCachedRefreshes:
         request_data = {
             "text_to_match": "I love going hiking. What should I pack for lunch?",
         }
-        headers = {"Authorization": "Bearer %s" % os.getenv("INBOUND_CHECK_TOKEN")}
         client.post("/inbound/check", json=request_data, headers=headers)
         captured = capsys.readouterr()
 

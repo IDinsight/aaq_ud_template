@@ -6,7 +6,6 @@ LABEL maintainer="IDinsight"
 
 ARG NAME
 ARG PORT
-ARG TOKEN_MACHINE_USER
 ARG HOME_DIR=/usr/src/${NAME}
 
 # Install psycopg2 dependencies
@@ -19,7 +18,6 @@ RUN apt-get-install.sh python3-dev \
 
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
-RUN pip install "git+https://${TOKEN_MACHINE_USER}@github.com/IDinsight/faqt.git@v1.1.1"
 
 RUN useradd -ms /bin/bash -d ${HOME_DIR} container_user
 RUN chown -R container_user: ${HOME_DIR}
